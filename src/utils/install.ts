@@ -262,22 +262,50 @@ export interface InstallResult {
   stderr?: string;
 }
 
+const TRAILING_CR = /\r$/;
+
+/**
+ * Buffers raw stdout/stderr chunks and forwards complete lines to `onLine`,
+ * holding back a trailing partial line until the next chunk completes it —
+ * a package manager doesn't align its writes to line boundaries.
+ */
+function createLineSplitter(onLine: (line: string) => void) {
+  let buffer = "";
+  return (chunk: Buffer) => {
+    buffer += chunk.toString();
+    const lines = buffer.split("\n");
+    buffer = lines.pop() ?? "";
+    for (const rawLine of lines) {
+      const line = rawLine.replace(TRAILING_CR, "");
+      if (line.length > 0) {
+        onLine(line);
+      }
+    }
+  };
+}
+
 function runInstall(
   packageManager: PackageManager,
   args: string[],
-  cwd: string
+  cwd: string,
+  onOutput?: (line: string) => void
 ): Promise<InstallResult> {
   return new Promise((resolvePromise) => {
     const child = spawn(packageManager, args, {
       cwd,
       shell: process.platform === "win32",
-      stdio: ["ignore", "ignore", "pipe"],
+      stdio: ["ignore", "pipe", "pipe"],
     });
 
     let stderr = "";
     child.stderr?.on("data", (chunk: Buffer) => {
       stderr += chunk.toString();
     });
+
+    if (onOutput) {
+      child.stdout?.on("data", createLineSplitter(onOutput));
+      child.stderr?.on("data", createLineSplitter(onOutput));
+    }
 
     child.on("error", (err) => {
       resolvePromise({ ok: false, stderr: err.message });
@@ -297,7 +325,8 @@ export async function installDependencies(
   dependencies: string[],
   devDependencies: string[],
   packageManager: PackageManager,
-  cwd: string
+  cwd: string,
+  onOutput?: (line: string) => void
 ): Promise<InstallResult> {
   assertSafeDependencies([...dependencies, ...devDependencies]);
 
@@ -307,7 +336,8 @@ export async function installDependencies(
     const result = await runInstall(
       packageManager,
       [add, ...dependencies],
-      cwd
+      cwd,
+      onOutput
     );
     if (!result.ok) {
       return result;
@@ -318,7 +348,8 @@ export async function installDependencies(
     const result = await runInstall(
       packageManager,
       [add, dev, ...devDependencies],
-      cwd
+      cwd,
+      onOutput
     );
     if (!result.ok) {
       return result;

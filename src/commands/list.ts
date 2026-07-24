@@ -8,7 +8,7 @@ interface ListOptions {
 }
 
 export async function list(options: ListOptions): Promise<void> {
-  const loadingSpinner = options.json ? null : spinner();
+  const loadingSpinner = options.json ? null : spinner({ indicator: "timer" });
   loadingSpinner?.start("Fetching registry...");
   let data: Awaited<ReturnType<typeof fetchRegistry>>;
   try {

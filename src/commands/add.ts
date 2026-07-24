@@ -5,6 +5,7 @@ import {
   outro,
   select,
   spinner,
+  taskLog,
 } from "@clack/prompts";
 import { searchMultiselect } from "@/prompts/search-multiselect.js";
 import type { PackageManager, ProjectConfig, RegistryItem } from "@/types.js";
@@ -52,7 +53,7 @@ interface AddOptions {
 }
 
 async function pickComponents(registry?: string): Promise<string[] | null> {
-  const loadingSpinner = spinner();
+  const loadingSpinner = spinner({ indicator: "timer" });
   loadingSpinner.start("Fetching available components...");
   let availableComponents: string[];
   try {
@@ -90,7 +91,7 @@ async function resolveComponents(
   registry: string | undefined,
   silent: boolean
 ): Promise<RegistryItem[] | null> {
-  const loadingSpinner = spinner();
+  const loadingSpinner = spinner({ indicator: "timer" });
   loadingSpinner.start("Resolving dependencies...");
 
   const allComponents: RegistryItem[] = [];
@@ -336,22 +337,22 @@ async function installNpmDependencies(
   }
 
   const allDeps = [...dependencies, ...devDependencies];
-  const loadingSpinner = spinner();
-  loadingSpinner.start(`Installing ${allDeps.join(", ")}`);
+  const log = taskLog({ title: `Installing ${allDeps.join(", ")}` });
 
   const result = await installDependencies(
     dependencies,
     devDependencies,
     packageManager,
-    cwd
+    cwd,
+    (line) => log.message(line)
   );
 
   if (result.ok) {
-    loadingSpinner.stop(`Installed: ${allDeps.join(", ")}`);
+    log.success(`Installed: ${allDeps.join(", ")}`);
     return;
   }
 
-  loadingSpinner.error("Failed to install dependencies");
+  log.error("Failed to install dependencies", { showLog: true });
   if (result.stderr) {
     note(result.stderr, "Error");
   }

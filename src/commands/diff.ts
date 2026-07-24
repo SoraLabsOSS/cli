@@ -15,7 +15,7 @@ async function resolveComponentsForDiff(
   names: string[],
   registry: string | undefined
 ): Promise<RegistryItem[] | null> {
-  const loadingSpinner = spinner();
+  const loadingSpinner = spinner({ indicator: "timer" });
   loadingSpinner.start("Resolving dependencies...");
 
   const allComponents: RegistryItem[] = [];

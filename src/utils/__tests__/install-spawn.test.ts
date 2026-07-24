@@ -11,6 +11,7 @@ const TEST_CWD = "/workspace/packages/ui";
  */
 class FakeChildProcess extends EventEmitter {
   stderr = new EventEmitter();
+  stdout = new EventEmitter();
 }
 
 function mockSpawn(
@@ -156,5 +157,83 @@ describe("installDependencies", () => {
 
     expect(options[0]?.cwd).toBe(TEST_CWD);
     expect(options[0]?.cwd).not.toBe(process.cwd());
+  });
+});
+
+/**
+ * Real npm/bun/pnpm/yarn output doesn't arrive on line boundaries — chunks
+ * can split mid-line. This mock lets a test control exactly what's written
+ * to stdout/stderr and when, so the line-buffering logic can be verified
+ * independently of process timing.
+ */
+function mockSpawnStreaming(emit: (child: FakeChildProcess) => void) {
+  mock.module("node:child_process", () => ({
+    spawn: mock(() => {
+      const child = new FakeChildProcess();
+      queueMicrotask(() => {
+        emit(child);
+        child.emit("close", 0);
+      });
+      return child;
+    }),
+  }));
+}
+
+describe("installDependencies onOutput streaming", () => {
+  test("forwards complete stdout lines to onOutput", async () => {
+    mockSpawnStreaming(({ stdout }) => {
+      stdout.emit("data", Buffer.from("added 3 packages\ndone\n"));
+    });
+    const { installDependencies } = await import("@/utils/install.js");
+    const lines: string[] = [];
+
+    await installDependencies(["react"], [], "npm", TEST_CWD, (line) =>
+      lines.push(line)
+    );
+
+    expect(lines).toEqual(["added 3 packages", "done"]);
+  });
+
+  test("buffers a partial line across chunks until it's completed", async () => {
+    mockSpawnStreaming(({ stdout }) => {
+      stdout.emit("data", Buffer.from("added 3 pack"));
+      stdout.emit("data", Buffer.from("ages\n"));
+    });
+    const { installDependencies } = await import("@/utils/install.js");
+    const lines: string[] = [];
+
+    await installDependencies(["react"], [], "npm", TEST_CWD, (line) =>
+      lines.push(line)
+    );
+
+    expect(lines).toEqual(["added 3 packages"]);
+  });
+
+  test("forwards stderr lines to onOutput too (warnings aren't just an error path)", async () => {
+    mockSpawnStreaming(({ stderr }) => {
+      stderr.emit("data", Buffer.from("npm warn deprecated foo@1.0.0\n"));
+    });
+    const { installDependencies } = await import("@/utils/install.js");
+    const lines: string[] = [];
+
+    await installDependencies(["react"], [], "npm", TEST_CWD, (line) =>
+      lines.push(line)
+    );
+
+    expect(lines).toEqual(["npm warn deprecated foo@1.0.0"]);
+  });
+
+  test("strips trailing CR and drops empty lines", async () => {
+    mockSpawnStreaming(({ stdout }) => {
+      stdout.emit("data", Buffer.from("line one\r\n\nline two\r\n"));
+    });
+    const { installDependencies } = await import("@/utils/install.js");
+    const lines: string[] = [];
+
+    await installDependencies(["react"], [], "npm", TEST_CWD, (line) =>
+      lines.push(line)
+    );
+
+    expect(lines).toEqual(["line one", "line two"]);
   });
 });
