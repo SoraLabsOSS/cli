@@ -1,8 +1,9 @@
-import { outro, spinner } from "@clack/prompts";
+import { outro } from "@clack/prompts";
 import type { RegistryItem } from "@/types.js";
 import { error } from "@/utils/colors.js";
 import { detectConfig } from "@/utils/detect.js";
 import { diffComponentFiles, printFileDiff } from "@/utils/diff.js";
+import { spinner } from "@/utils/spinner.js";
 import { flattenTree, resolveTree } from "@/utils/tree.js";
 
 interface DiffOptions {
@@ -15,7 +16,7 @@ async function resolveComponentsForDiff(
   names: string[],
   registry: string | undefined
 ): Promise<RegistryItem[] | null> {
-  const loadingSpinner = spinner({ indicator: "timer" });
+  const loadingSpinner = spinner();
   loadingSpinner.start("Resolving dependencies...");
 
   const allComponents: RegistryItem[] = [];

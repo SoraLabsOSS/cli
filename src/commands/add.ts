@@ -4,7 +4,6 @@ import {
   note,
   outro,
   select,
-  spinner,
   taskLog,
 } from "@clack/prompts";
 import { searchMultiselect } from "@/prompts/search-multiselect.js";
@@ -34,6 +33,7 @@ import {
   getAvailableComponents,
   resolveRegistryUrl,
 } from "@/utils/registry.js";
+import { spinner } from "@/utils/spinner.js";
 import {
   collectNpmDeps,
   flattenTree,
@@ -53,7 +53,7 @@ interface AddOptions {
 }
 
 async function pickComponents(registry?: string): Promise<string[] | null> {
-  const loadingSpinner = spinner({ indicator: "timer" });
+  const loadingSpinner = spinner();
   loadingSpinner.start("Fetching available components...");
   let availableComponents: string[];
   try {
@@ -91,7 +91,7 @@ async function resolveComponents(
   registry: string | undefined,
   silent: boolean
 ): Promise<RegistryItem[] | null> {
-  const loadingSpinner = spinner({ indicator: "timer" });
+  const loadingSpinner = spinner();
   loadingSpinner.start("Resolving dependencies...");
 
   const allComponents: RegistryItem[] = [];

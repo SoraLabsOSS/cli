@@ -1,6 +1,6 @@
-import { spinner } from "@clack/prompts";
 import { done, highlight, sanitize } from "@/utils/colors.js";
 import { fetchRegistry } from "@/utils/registry.js";
+import { spinner } from "@/utils/spinner.js";
 
 interface ListOptions {
   json?: boolean;
@@ -8,7 +8,7 @@ interface ListOptions {
 }
 
 export async function list(options: ListOptions): Promise<void> {
-  const loadingSpinner = options.json ? null : spinner({ indicator: "timer" });
+  const loadingSpinner = options.json ? null : spinner();
   loadingSpinner?.start("Fetching registry...");
   let data: Awaited<ReturnType<typeof fetchRegistry>>;
   try {
