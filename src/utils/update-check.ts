@@ -2,11 +2,11 @@ const REGISTRY_URL =
   "https://registry.npmjs.org/@soralabsoss%2Fsora-cli/latest";
 const CHECK_TIMEOUT_MS = 1000;
 
-function parseVersionParts(version: string): number[] {
+export function parseVersionParts(version: string): number[] {
   return version.split(".").map((part) => Number.parseInt(part, 10) || 0);
 }
 
-function isNewer(latest: string, current: string): boolean {
+export function isNewer(latest: string, current: string): boolean {
   const latestParts = parseVersionParts(latest);
   const currentParts = parseVersionParts(current);
   const length = Math.max(latestParts.length, currentParts.length);

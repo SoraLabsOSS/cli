@@ -1,4 +1,4 @@
-import { spawnSync } from "node:child_process";
+import { spawn } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve, sep } from "node:path";
 import type {
@@ -24,10 +24,11 @@ export function cn(...inputs: ClassValue[]) {
  * project doesn't already have it.
  */
 export function ensureUtils(
+  cwd: string,
   srcDir: string,
   dryRun = false
 ): "written" | "exists" {
-  const destPath = join(process.cwd(), srcDir, "lib", "utils.ts");
+  const destPath = join(cwd, srcDir, "lib", "utils.ts");
   if (existsSync(destPath)) {
     return "exists";
   }
@@ -182,7 +183,7 @@ export async function writeComponent(
   const skipped: string[] = [];
   const unchanged: string[] = [];
   let overwrite = overwriteAll;
-  const cwd = process.cwd();
+  const { cwd } = config;
 
   // Validate every target before writing any of them, so one unsafe file
   // in a multi-file component can't leave partial writes behind.
@@ -256,34 +257,73 @@ export function assertSafeDependencies(deps: string[]): void {
   }
 }
 
-export function installDependencies(
+export interface InstallResult {
+  ok: boolean;
+  stderr?: string;
+}
+
+function runInstall(
+  packageManager: PackageManager,
+  args: string[],
+  cwd: string
+): Promise<InstallResult> {
+  return new Promise((resolvePromise) => {
+    const child = spawn(packageManager, args, {
+      cwd,
+      shell: process.platform === "win32",
+      stdio: ["ignore", "ignore", "pipe"],
+    });
+
+    let stderr = "";
+    child.stderr?.on("data", (chunk: Buffer) => {
+      stderr += chunk.toString();
+    });
+
+    child.on("error", (err) => {
+      resolvePromise({ ok: false, stderr: err.message });
+    });
+
+    child.on("close", (code) => {
+      if (code !== 0) {
+        resolvePromise({ ok: false, stderr: stderr.trim() || undefined });
+        return;
+      }
+      resolvePromise({ ok: true });
+    });
+  });
+}
+
+export async function installDependencies(
   dependencies: string[],
   devDependencies: string[],
-  packageManager: PackageManager
-): boolean {
+  packageManager: PackageManager,
+  cwd: string
+): Promise<InstallResult> {
   assertSafeDependencies([...dependencies, ...devDependencies]);
 
   const { add, dev } = INSTALL_ARGS[packageManager];
 
   if (dependencies.length > 0) {
-    const result = spawnSync(packageManager, [add, ...dependencies], {
-      shell: process.platform === "win32",
-      stdio: "ignore",
-    });
-    if (result.status !== 0) {
-      return false;
+    const result = await runInstall(
+      packageManager,
+      [add, ...dependencies],
+      cwd
+    );
+    if (!result.ok) {
+      return result;
     }
   }
 
   if (devDependencies.length > 0) {
-    const result = spawnSync(packageManager, [add, dev, ...devDependencies], {
-      shell: process.platform === "win32",
-      stdio: "ignore",
-    });
-    if (result.status !== 0) {
-      return false;
+    const result = await runInstall(
+      packageManager,
+      [add, dev, ...devDependencies],
+      cwd
+    );
+    if (!result.ok) {
+      return result;
     }
   }
 
-  return true;
+  return { ok: true };
 }

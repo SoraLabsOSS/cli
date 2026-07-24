@@ -30,7 +30,7 @@ export function diffComponentFiles(
   config: ProjectConfig
 ): FileDiffResult[] {
   const results: FileDiffResult[] = [];
-  const cwd = process.cwd();
+  const { cwd } = config;
 
   // Validate every target before reading any of them — same guard
   // writeComponent applies before writing, so a malicious registry can't

@@ -17,5 +17,6 @@ export default defineConfig({
   format: ["esm"],
   minify: true,
   platform: "node",
+  sourcemap: true,
   target: "node18",
 });

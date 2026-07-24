@@ -1,5 +1,5 @@
 import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import type { ProjectConfig } from "@/types.js";
 import { active, bar, done, error, sanitize, warn } from "@/utils/colors.js";
 import {
@@ -21,6 +21,7 @@ interface CheckResult {
 }
 
 interface DoctorOptions {
+  cwd?: string;
   json?: boolean;
   path?: string;
   registry?: string;
@@ -39,12 +40,13 @@ interface PackageJsonShape {
   devDependencies?: Record<string, string>;
 }
 
-function readPackageJson(): PackageJsonShape | null {
-  if (!existsSync("package.json")) {
+function readPackageJson(cwd: string): PackageJsonShape | null {
+  const path = join(cwd, "package.json");
+  if (!existsSync(path)) {
     return null;
   }
   try {
-    return JSON.parse(readFileSync("package.json", "utf8")) as PackageJsonShape;
+    return JSON.parse(readFileSync(path, "utf8")) as PackageJsonShape;
   } catch {
     return null;
   }
@@ -55,6 +57,31 @@ function getDepVersion(
   name: string
 ): string | null {
   return pkg?.dependencies?.[name] ?? pkg?.devDependencies?.[name] ?? null;
+}
+
+/**
+ * Walks up from cwd looking for `name` in a package.json's dependencies —
+ * mirrors detectPackageManager's ancestor walk, since a workspace package
+ * (e.g. `packages/ui` in a Turborepo/Bun/pnpm monorepo) commonly relies on
+ * a shared devDependency like tailwindcss or react declared once at the
+ * monorepo root rather than duplicated in every package.json.
+ */
+function findAncestorDependencyVersion(
+  cwd: string,
+  name: string
+): string | null {
+  let dir = cwd;
+  for (;;) {
+    const version = getDepVersion(readPackageJson(dir), name);
+    if (version) {
+      return version;
+    }
+    const parent = dirname(dir);
+    if (parent === dir) {
+      return null;
+    }
+    dir = parent;
+  }
 }
 
 function checkNodeVersion(): CheckResult {
@@ -79,7 +106,9 @@ function checkNodeVersion(): CheckResult {
 }
 
 function checkPackageManager(config: ProjectConfig): CheckResult {
-  const found = LOCKFILES.filter(([file]) => existsSync(file));
+  const found = LOCKFILES.filter(([file]) =>
+    existsSync(join(config.cwd, file))
+  );
   if (found.length > 1) {
     const names = found.map(([file]) => file).join(", ");
     return {
@@ -97,8 +126,9 @@ function checkPackageManager(config: ProjectConfig): CheckResult {
   };
 }
 
-function checkComponentsJson(): CheckResult {
-  if (!existsSync("components.json")) {
+function checkComponentsJson(cwd: string): CheckResult {
+  const path = join(cwd, "components.json");
+  if (!existsSync(path)) {
     return {
       id: "components-json",
       label: "components.json",
@@ -110,7 +140,7 @@ function checkComponentsJson(): CheckResult {
 
   let parsed: { aliases?: unknown };
   try {
-    parsed = JSON.parse(readFileSync("components.json", "utf8"));
+    parsed = JSON.parse(readFileSync(path, "utf8"));
   } catch (err) {
     return {
       id: "components-json",
@@ -142,7 +172,7 @@ function checkComponentsJson(): CheckResult {
 }
 
 function checkAstroAlias(config: ProjectConfig): CheckResult | null {
-  if (!isAstroProject()) {
+  if (!isAstroProject(config.cwd)) {
     return null;
   }
   if (config.aliasConfigured) {
@@ -186,8 +216,8 @@ function parseMajorVersion(version: string): number | null {
   return match?.[1] ? Number.parseInt(match[1], 10) : null;
 }
 
-function checkTailwind(pkg: PackageJsonShape | null): CheckResult {
-  const version = getDepVersion(pkg, "tailwindcss");
+function checkTailwind(cwd: string): CheckResult {
+  const version = findAncestorDependencyVersion(cwd, "tailwindcss");
   if (!version) {
     return {
       id: "tailwind",
@@ -208,7 +238,10 @@ function checkTailwind(pkg: PackageJsonShape | null): CheckResult {
     };
   }
 
-  if (major === 3 && !TAILWIND_CONFIG_FILES.some((file) => existsSync(file))) {
+  if (
+    major === 3 &&
+    !TAILWIND_CONFIG_FILES.some((file) => existsSync(join(cwd, file)))
+  ) {
     return {
       id: "tailwind",
       label: "Tailwind CSS",
@@ -229,8 +262,8 @@ function checkTailwind(pkg: PackageJsonShape | null): CheckResult {
   };
 }
 
-function checkReact(pkg: PackageJsonShape | null): CheckResult {
-  const version = getDepVersion(pkg, "react");
+function checkReact(cwd: string): CheckResult {
+  const version = findAncestorDependencyVersion(cwd, "react");
   if (!version) {
     return {
       id: "react",
@@ -249,7 +282,7 @@ function checkReact(pkg: PackageJsonShape | null): CheckResult {
 }
 
 function checkUtilsDeps(config: ProjectConfig): CheckResult {
-  const utilsPath = join(process.cwd(), config.srcDir, "lib", "utils.ts");
+  const utilsPath = join(config.cwd, config.srcDir, "lib", "utils.ts");
   if (!existsSync(utilsPath)) {
     return {
       id: "utils-deps",
@@ -259,7 +292,7 @@ function checkUtilsDeps(config: ProjectConfig): CheckResult {
     };
   }
 
-  const installed = getInstalledDependencyNames();
+  const installed = getInstalledDependencyNames(config.cwd);
   const missing = ["clsx", "tailwind-merge"].filter(
     (dep) => !installed.has(dep)
   );
@@ -334,17 +367,16 @@ export async function doctor(
   currentVersion: string,
   options: DoctorOptions
 ): Promise<boolean> {
-  const config = detectConfig();
+  const cwd = options.cwd ?? process.cwd();
+  const config = detectConfig(cwd);
   if (options.path) {
     config.componentPath = options.path;
   }
 
-  const pkg = readPackageJson();
-
   const syncResults: CheckResult[] = [
     checkNodeVersion(),
     checkPackageManager(config),
-    checkComponentsJson(),
+    checkComponentsJson(cwd),
   ];
 
   const astroResult = checkAstroAlias(config);
@@ -354,7 +386,7 @@ export async function doctor(
     syncResults.push(checkPathAlias(config));
   }
 
-  syncResults.push(checkTailwind(pkg), checkReact(pkg), checkUtilsDeps(config));
+  syncResults.push(checkTailwind(cwd), checkReact(cwd), checkUtilsDeps(config));
 
   if (!options.json) {
     active("Running project diagnostics...");

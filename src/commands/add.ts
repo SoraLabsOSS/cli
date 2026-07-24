@@ -41,6 +41,7 @@ import {
 } from "@/utils/tree.js";
 
 interface AddOptions {
+  cwd?: string;
   dryRun?: boolean;
   force?: boolean;
   path?: string;
@@ -169,7 +170,8 @@ interface ConfirmedInstall {
 async function collectDepsAndConfirm(
   allComponents: RegistryItem[],
   skipConfirm: boolean,
-  registryUrl: string
+  registryUrl: string,
+  cwd: string
 ): Promise<ConfirmedInstall | null> {
   const needsUtils = allComponents.some((item) =>
     item.registryDependencies?.includes("utils")
@@ -188,7 +190,7 @@ async function collectDepsAndConfirm(
     ...collected.devDependencies,
   ]);
 
-  const alreadyInstalled = getInstalledDependencyNames();
+  const alreadyInstalled = getInstalledDependencyNames(cwd);
   const dependencies = collected.dependencies.filter(
     (dep) => !alreadyInstalled.has(dep)
   );
@@ -197,6 +199,11 @@ async function collectDepsAndConfirm(
   );
 
   if (!skipConfirm) {
+    if (!process.stdin.isTTY) {
+      throw new Error(
+        "Confirmation required but no TTY available. Pass --yes to skip the confirmation prompt (for scripts/CI)."
+      );
+    }
     const confirmed = await confirm({
       message: buildConfirmMessage(
         allComponents.length,
@@ -246,6 +253,12 @@ async function writeComponents(
       config,
       overwriteAll,
       async (filename) => {
+        if (!process.stdin.isTTY) {
+          warn(
+            `File exists and no TTY available to prompt: ${sanitize(filename)}. Skipping — run with --force to overwrite.`
+          );
+          return "skip";
+        }
         const action = await select({
           message: `File exists: ${sanitize(filename)}`,
           options: [
@@ -299,12 +312,13 @@ function buildManualInstallCommands(
   return commands;
 }
 
-function installNpmDependencies(
+async function installNpmDependencies(
   dependencies: string[],
   devDependencies: string[],
   packageManager: PackageManager,
-  dryRun: boolean
-): void {
+  dryRun: boolean,
+  cwd: string
+): Promise<void> {
   if (dependencies.length === 0 && devDependencies.length === 0) {
     return;
   }
@@ -325,18 +339,22 @@ function installNpmDependencies(
   const loadingSpinner = spinner();
   loadingSpinner.start(`Installing ${allDeps.join(", ")}`);
 
-  const installed = installDependencies(
+  const result = await installDependencies(
     dependencies,
     devDependencies,
-    packageManager
+    packageManager,
+    cwd
   );
 
-  if (installed) {
+  if (result.ok) {
     loadingSpinner.stop(`Installed: ${allDeps.join(", ")}`);
     return;
   }
 
   loadingSpinner.stop("Failed to install dependencies", 1);
+  if (result.stderr) {
+    note(result.stderr, "Error");
+  }
   note(
     buildManualInstallCommands(
       dependencies,
@@ -358,7 +376,7 @@ async function performInstall(
   const { dependencies, devDependencies, needsUtils } = install;
 
   if (needsUtils) {
-    const result = ensureUtils(config.srcDir, dryRun);
+    const result = ensureUtils(config.cwd, config.srcDir, dryRun);
     if (result === "written" && !silent) {
       const label = dryRun ? "Would write" : "Written";
       done(`${label}: ${config.srcDir ? `${config.srcDir}/` : ""}lib/utils.ts`);
@@ -372,11 +390,12 @@ async function performInstall(
     dryRun,
     silent
   );
-  installNpmDependencies(
+  await installNpmDependencies(
     dependencies,
     devDependencies,
     config.packageManager,
-    dryRun
+    dryRun,
+    config.cwd
   );
 
   const totalComponents = allComponents.length;
@@ -396,7 +415,8 @@ export async function add(
   componentNames: string[],
   options: AddOptions
 ): Promise<boolean> {
-  const config = detectConfig();
+  const cwd = options.cwd ?? process.cwd();
+  const config = detectConfig(cwd);
   if (options.path) {
     config.componentPath = options.path;
   }
@@ -411,7 +431,7 @@ export async function add(
 
   done(`Detected: ${config.componentPath}/ (${config.packageManager})`);
   done(`Registry: ${registryUrl}`);
-  if (!config.aliasConfigured && isAstroProject()) {
+  if (!config.aliasConfigured && isAstroProject(cwd)) {
     warn(
       `No "${config.aliases.components.split("/")[0]}/*" path alias found in tsconfig.json/jsconfig.json — Astro's Vite bundler won't resolve it on its own. Add a matching "compilerOptions.paths" entry plus a Vite alias (or install vite-tsconfig-paths) before installing, or the written imports won't resolve.`
     );
@@ -423,6 +443,12 @@ export async function add(
 
   let selectedComponents = componentNames;
   if (selectedComponents.length === 0) {
+    if (!process.stdin.isTTY) {
+      error(
+        'No components specified and no TTY available for interactive selection. Run with component names, e.g. "sora add <component>".'
+      );
+      return false;
+    }
     const picked = await pickComponents(options.registry);
     if (!picked) {
       return true;
@@ -449,7 +475,8 @@ export async function add(
   const confirmResult = await collectDepsAndConfirm(
     allComponents,
     (options.yes ?? false) || (options.dryRun ?? false),
-    registryUrl
+    registryUrl,
+    cwd
   );
   if (!confirmResult) {
     return true;

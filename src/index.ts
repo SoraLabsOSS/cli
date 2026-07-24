@@ -1,9 +1,8 @@
-import { existsSync, statSync } from "node:fs";
-import { resolve } from "node:path";
 import { add } from "@/commands/add.js";
 import { diff } from "@/commands/diff.js";
 import { doctor } from "@/commands/doctor.js";
 import { list } from "@/commands/list.js";
+import { parseComponentArgs, parseFlag, resolveCwd } from "@/utils/args.js";
 import { error, header } from "@/utils/colors.js";
 import { printUpdateNotice, startUpdateCheck } from "@/utils/update-check.js";
 
@@ -76,39 +75,10 @@ function printHelp(): void {
   console.log("  npx @soralabsoss/sora-cli doctor --json");
 }
 
-function parseFlag(argList: string[], ...flags: string[]): string | undefined {
-  for (const flag of flags) {
-    const index = argList.indexOf(flag);
-    if (index !== -1) {
-      return argList[index + 1];
-    }
-  }
-}
-
-/**
- * Resolves and chdir's into the target directory before any command logic
- * runs, so detectConfig() (and every other relative fs/spawn call downstream)
- * transparently operates against that directory — mirrors how a monorepo
- * workspace like `packages/ui` gets its own tsconfig/components.json read
- * instead of the repo root's.
- */
-function applyCwd(cwd: string | undefined): boolean {
-  if (!cwd) {
-    return true;
-  }
-  const resolved = resolve(cwd);
-  if (!(existsSync(resolved) && statSync(resolved).isDirectory())) {
-    error(`Directory not found: ${cwd}`);
-    return false;
-  }
-  process.chdir(resolved);
-  return true;
-}
-
 async function runAdd(): Promise<void> {
   const rest = args.slice(1);
-  const cwd = parseFlag(rest, "--cwd", "-c");
-  if (!applyCwd(cwd)) {
+  const cwd = resolveCwd(parseFlag(rest, "--cwd", "-c"));
+  if (cwd === null) {
     process.exitCode = 1;
     return;
   }
@@ -119,21 +89,10 @@ async function runAdd(): Promise<void> {
   const dryRun = rest.includes("--dry-run");
   const silent = rest.includes("--silent") || rest.includes("-s");
   const view = rest.includes("--view");
-
-  const componentArgs = rest.filter((arg, i) => {
-    if (arg.startsWith("-")) {
-      return false;
-    }
-    const prev = rest[i - 1];
-    return (
-      prev !== "--path" &&
-      prev !== "--registry" &&
-      prev !== "--cwd" &&
-      prev !== "-c"
-    );
-  });
+  const componentArgs = parseComponentArgs(rest);
 
   const ok = await add(componentArgs, {
+    cwd,
     dryRun,
     force,
     path,
@@ -156,28 +115,16 @@ async function runList(): Promise<void> {
 
 async function runDiff(): Promise<void> {
   const rest = args.slice(1);
-  const cwd = parseFlag(rest, "--cwd", "-c");
-  if (!applyCwd(cwd)) {
+  const cwd = resolveCwd(parseFlag(rest, "--cwd", "-c"));
+  if (cwd === null) {
     process.exitCode = 1;
     return;
   }
   const path = parseFlag(rest, "--path");
   const registry = parseFlag(rest, "--registry");
+  const componentArgs = parseComponentArgs(rest);
 
-  const componentArgs = rest.filter((arg, i) => {
-    if (arg.startsWith("-")) {
-      return false;
-    }
-    const prev = rest[i - 1];
-    return (
-      prev !== "--path" &&
-      prev !== "--registry" &&
-      prev !== "--cwd" &&
-      prev !== "-c"
-    );
-  });
-
-  const ok = await diff(componentArgs, { path, registry });
+  const ok = await diff(componentArgs, { cwd, path, registry });
   if (!ok) {
     process.exitCode = 1;
   }
@@ -185,8 +132,8 @@ async function runDiff(): Promise<void> {
 
 async function runDoctor(): Promise<void> {
   const rest = args.slice(1);
-  const cwd = parseFlag(rest, "--cwd", "-c");
-  if (!applyCwd(cwd)) {
+  const cwd = resolveCwd(parseFlag(rest, "--cwd", "-c"));
+  if (cwd === null) {
     process.exitCode = 1;
     return;
   }
@@ -194,7 +141,7 @@ async function runDoctor(): Promise<void> {
   const registry = parseFlag(rest, "--registry");
   const json = rest.includes("--json");
 
-  const ok = await doctor(__VERSION__, { json, path, registry });
+  const ok = await doctor(__VERSION__, { cwd, json, path, registry });
   if (!ok) {
     process.exitCode = 1;
   }

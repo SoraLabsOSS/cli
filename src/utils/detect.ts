@@ -49,8 +49,8 @@ function readPackageManagerField(dir: string): PackageManager | null {
  * this resolves correctly when run from inside a workspace package whose
  * lockfile lives at the monorepo root (e.g. a Bun/pnpm/Turbo workspace).
  */
-function detectPackageManager(): PackageManager {
-  let dir = process.cwd();
+function detectPackageManager(cwd: string): PackageManager {
+  let dir = cwd;
 
   for (;;) {
     for (const [file, manager] of LOCKFILES) {
@@ -74,13 +74,18 @@ function detectPackageManager(): PackageManager {
   return "npm";
 }
 
-function detectAlias(): { alias: string; configured: boolean; srcDir: string } {
+function detectAlias(cwd: string): {
+  alias: string;
+  configured: boolean;
+  srcDir: string;
+} {
   for (const file of ["tsconfig.json", "jsconfig.json"]) {
-    if (!existsSync(file)) {
+    const filePath = join(cwd, file);
+    if (!existsSync(filePath)) {
       continue;
     }
     try {
-      const raw = readFileSync(file, "utf8");
+      const raw = readFileSync(filePath, "utf8");
       const parsed = JSON.parse(raw) as {
         compilerOptions?: { paths?: Record<string, string[]> };
       };
@@ -107,7 +112,7 @@ function detectAlias(): { alias: string; configured: boolean; srcDir: string } {
   return {
     alias: "@",
     configured: false,
-    srcDir: existsSync("src") ? "src" : "",
+    srcDir: existsSync(join(cwd, "src")) ? "src" : "",
   };
 }
 
@@ -125,8 +130,8 @@ const ASTRO_CONFIG_FILES = [
  * separately from `aliasConfigured` so `add.ts` can warn when a component's
  * rewritten imports would land in an Astro project with no alias wired up.
  */
-export function isAstroProject(): boolean {
-  return ASTRO_CONFIG_FILES.some((file) => existsSync(file));
+export function isAstroProject(cwd: string): boolean {
+  return ASTRO_CONFIG_FILES.some((file) => existsSync(join(cwd, file)));
 }
 
 /**
@@ -135,12 +140,15 @@ export function isAstroProject(): boolean {
  * where it's present, since a project can point "hooks" and "lib" at
  * different roots than "components".
  */
-function readComponentsJsonAliases(): Partial<ComponentAliases> | null {
-  if (!existsSync("components.json")) {
+function readComponentsJsonAliases(
+  cwd: string
+): Partial<ComponentAliases> | null {
+  const path = join(cwd, "components.json");
+  if (!existsSync(path)) {
     return null;
   }
   try {
-    const parsed = JSON.parse(readFileSync("components.json", "utf8")) as {
+    const parsed = JSON.parse(readFileSync(path, "utf8")) as {
       aliases?: Partial<ComponentAliases>;
     };
     return parsed.aliases ?? null;
@@ -153,12 +161,13 @@ function readComponentsJsonAliases(): Partial<ComponentAliases> | null {
  * A registry item's declared dependencies shouldn't clobber a version the
  * user already pinned — read what's already there so callers can skip it.
  */
-export function getInstalledDependencyNames(): Set<string> {
-  if (!existsSync("package.json")) {
+export function getInstalledDependencyNames(cwd: string): Set<string> {
+  const path = join(cwd, "package.json");
+  if (!existsSync(path)) {
     return new Set();
   }
   try {
-    const pkg = JSON.parse(readFileSync("package.json", "utf8")) as {
+    const pkg = JSON.parse(readFileSync(path, "utf8")) as {
       dependencies?: Record<string, string>;
       devDependencies?: Record<string, string>;
       peerDependencies?: Record<string, string>;
@@ -173,9 +182,9 @@ export function getInstalledDependencyNames(): Set<string> {
   }
 }
 
-export function detectConfig(): ProjectConfig {
-  const { alias, configured, srcDir } = detectAlias();
-  const fromComponentsJson = readComponentsJsonAliases();
+export function detectConfig(cwd: string): ProjectConfig {
+  const { alias, configured, srcDir } = detectAlias(cwd);
+  const fromComponentsJson = readComponentsJsonAliases(cwd);
 
   const aliases: ComponentAliases = {
     components: fromComponentsJson?.components ?? `${alias}/components`,
@@ -190,7 +199,8 @@ export function detectConfig(): ProjectConfig {
     componentPath: srcDir
       ? `${srcDir}/${DEFAULT_COMPONENT_PATH}`
       : DEFAULT_COMPONENT_PATH,
-    packageManager: detectPackageManager(),
+    cwd,
+    packageManager: detectPackageManager(cwd),
     srcDir,
   };
 }

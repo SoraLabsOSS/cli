@@ -6,6 +6,7 @@ import { diffComponentFiles, printFileDiff } from "@/utils/diff.js";
 import { flattenTree, resolveTree } from "@/utils/tree.js";
 
 interface DiffOptions {
+  cwd?: string;
   path?: string;
   registry?: string;
 }
@@ -63,7 +64,8 @@ export async function diff(
     return false;
   }
 
-  const config = detectConfig();
+  const cwd = options.cwd ?? process.cwd();
+  const config = detectConfig(cwd);
   if (options.path) {
     config.componentPath = options.path;
   }

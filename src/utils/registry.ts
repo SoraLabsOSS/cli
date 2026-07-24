@@ -4,7 +4,7 @@ import { sanitize } from "@/utils/colors.js";
 
 const HTTP_URL = /^https?:\/\//;
 const TRAILING_SLASH = /\/$/;
-const LOCAL_HOSTNAMES = new Set(["127.0.0.1", "::1", "localhost"]);
+const LOCAL_HOSTNAMES = new Set(["127.0.0.1", "::1", "[::1]", "localhost"]);
 
 /**
  * A custom `--registry`/`SORA_REGISTRY_URL` value is fetched over the
@@ -14,7 +14,7 @@ const LOCAL_HOSTNAMES = new Set(["127.0.0.1", "::1", "localhost"]);
  * content, same as upstream shadcn). Loopback is exempted so local
  * development/test registries keep working without HTTPS.
  */
-function assertSecureRegistryUrl(url: string): void {
+export function assertSecureRegistryUrl(url: string): void {
   let parsed: URL;
   try {
     parsed = new URL(url);

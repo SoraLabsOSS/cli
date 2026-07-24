@@ -53,6 +53,14 @@ export interface ProjectConfig {
   aliasConfigured: boolean;
   aliases: ComponentAliases;
   componentPath: string;
+  /**
+   * The resolved absolute directory this config was detected against (the
+   * `--cwd` target, or `process.cwd()`). Carried on the config — rather than
+   * relying on the process's actual working directory — so a command never
+   * needs a global `process.chdir()` to operate against a different
+   * directory (e.g. `--cwd packages/ui` for a monorepo workspace).
+   */
+  cwd: string;
   packageManager: PackageManager;
   srcDir: string;
 }
