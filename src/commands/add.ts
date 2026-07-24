@@ -125,7 +125,7 @@ async function resolveComponents(
       trees.push(tree);
     } catch (err) {
       loadingSpinner.error(`Failed to resolve ${name}`);
-      error((err as Error).message);
+      error(sanitize((err as Error).message));
       return null;
     }
   }
@@ -426,7 +426,7 @@ export async function add(
   try {
     registryUrl = resolveRegistryUrl(options.registry);
   } catch (err) {
-    error((err as Error).message);
+    error(sanitize((err as Error).message));
     return false;
   }
 

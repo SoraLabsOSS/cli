@@ -55,5 +55,6 @@ Every command also does a quick, non-blocking check against npm for a newer publ
 bun install
 bun run build      # bundles src/index.ts -> dist/index.js via tsup
 bun run typecheck
+bun test           # run test suite
 node dist/index.js list
 ```

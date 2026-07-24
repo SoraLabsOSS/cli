@@ -2,45 +2,161 @@ import { describe, expect, spyOn, test } from "bun:test";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { parseComponentArgs, parseFlag, resolveCwd } from "@/utils/args.js";
+import {
+  parseAddArgs,
+  parseDiffArgs,
+  parseDoctorArgs,
+  parseListArgs,
+  resolveCwd,
+} from "@/utils/args.js";
 
-describe("parseFlag", () => {
-  test("returns value after matching flag", () => {
-    expect(parseFlag(["--registry", "ui", "--force"], "--registry")).toBe("ui");
+describe("parseAddArgs", () => {
+  test("parses boolean flags as false by default", () => {
+    const parsed = parseAddArgs([]);
+    expect(parsed.force).toBe(false);
+    expect(parsed.yes).toBe(false);
+    expect(parsed["dry-run"]).toBe(false);
+    expect(parsed.silent).toBe(false);
+    expect(parsed.view).toBe(false);
   });
 
-  test("returns undefined when flag not present", () => {
-    expect(parseFlag(["--force", "--yes"], "--registry")).toBeUndefined();
+  test("parses long boolean flags", () => {
+    const parsed = parseAddArgs([
+      "--force",
+      "--yes",
+      "--dry-run",
+      "--silent",
+      "--view",
+    ]);
+    expect(parsed.force).toBe(true);
+    expect(parsed.yes).toBe(true);
+    expect(parsed["dry-run"]).toBe(true);
+    expect(parsed.silent).toBe(true);
+    expect(parsed.view).toBe(true);
   });
 
-  test("supports multiple flag aliases", () => {
-    expect(parseFlag(["-c", "packages/ui"], "--cwd", "-c")).toBe("packages/ui");
+  test("parses short boolean flag aliases", () => {
+    const parsed = parseAddArgs(["-f", "-y", "-s"]);
+    expect(parsed.force).toBe(true);
+    expect(parsed.yes).toBe(true);
+    expect(parsed.silent).toBe(true);
   });
 
-  test("matches first alias found", () => {
-    expect(parseFlag(["--cwd", "a", "-c", "b"], "--cwd", "-c")).toBe("a");
+  test("short boolean aliases before positionals do not swallow names", () => {
+    const parsed = parseAddArgs(["-f", "-y", "-s", "card", "accordion"]);
+    expect(parsed.force).toBe(true);
+    expect(parsed.yes).toBe(true);
+    expect(parsed.silent).toBe(true);
+    expect(parsed._.map(String)).toEqual(["card", "accordion"]);
   });
 
-  test("returns undefined for empty arg list", () => {
-    expect(parseFlag([], "--registry")).toBeUndefined();
+  test("parses string flags", () => {
+    const parsed = parseAddArgs([
+      "--path",
+      "src/ui",
+      "--registry",
+      "ui",
+      "--cwd",
+      "packages/ui",
+    ]);
+    expect(parsed.path).toBe("src/ui");
+    expect(parsed.registry).toBe("ui");
+    expect(parsed.cwd).toBe("packages/ui");
   });
 
-  test("returns undefined when flag is last arg with no value", () => {
-    expect(parseFlag(["--registry"], "--registry")).toBeUndefined();
+  test("string flags are undefined when not provided", () => {
+    const parsed = parseAddArgs([]);
+    expect(parsed.path).toBeUndefined();
+    expect(parsed.registry).toBeUndefined();
+    expect(parsed.cwd).toBeUndefined();
   });
 
-  test("does not match partial flag names", () => {
-    expect(parseFlag(["--registry-url", "x"], "--registry")).toBeUndefined();
+  test("collects positional args in _", () => {
+    const parsed = parseAddArgs([
+      "card",
+      "--force",
+      "accordion",
+      "--path",
+      "src/ui",
+      "tooltip",
+    ]);
+    expect(parsed._.map(String)).toEqual(["card", "accordion", "tooltip"]);
+    expect(parsed.force).toBe(true);
+    expect(parsed.path).toBe("src/ui");
   });
 
-  test("returns next arg even if it looks like a flag", () => {
-    expect(parseFlag(["--registry", "--force"], "--registry")).toBe("--force");
+  test("returns empty _ when only flags are given", () => {
+    const parsed = parseAddArgs(["--force", "--yes"]);
+    expect(parsed._).toEqual([]);
   });
 
-  test("returns first occurrence when flag is duplicated", () => {
-    expect(
-      parseFlag(["--registry", "a", "--registry", "b"], "--registry")
-    ).toBe("a");
+  test("resolves -c alias to cwd", () => {
+    const parsed = parseAddArgs(["-c", "packages/ui"]);
+    expect(parsed.cwd).toBe("packages/ui");
+  });
+});
+
+describe("parseListArgs", () => {
+  test("parses --json as false by default", () => {
+    const parsed = parseListArgs([]);
+    expect(parsed.json).toBe(false);
+  });
+
+  test("parses --json flag", () => {
+    const parsed = parseListArgs(["--json"]);
+    expect(parsed.json).toBe(true);
+  });
+
+  test("parses --registry string flag", () => {
+    const parsed = parseListArgs(["--registry", "ui"]);
+    expect(parsed.registry).toBe("ui");
+  });
+});
+
+describe("parseDiffArgs", () => {
+  test("parses string flags", () => {
+    const parsed = parseDiffArgs([
+      "--path",
+      "src/ui",
+      "--registry",
+      "ui",
+      "--cwd",
+      "packages/ui",
+    ]);
+    expect(parsed.path).toBe("src/ui");
+    expect(parsed.registry).toBe("ui");
+    expect(parsed.cwd).toBe("packages/ui");
+  });
+
+  test("collects positional component names", () => {
+    const parsed = parseDiffArgs(["card", "accordion", "--path", "src/ui"]);
+    expect(parsed._.map(String)).toEqual(["card", "accordion"]);
+  });
+
+  test("resolves -c alias to cwd", () => {
+    const parsed = parseDiffArgs(["-c", "packages/ui", "card"]);
+    expect(parsed.cwd).toBe("packages/ui");
+    expect(parsed._.map(String)).toEqual(["card"]);
+  });
+});
+
+describe("parseDoctorArgs", () => {
+  test("parses --json as false by default", () => {
+    const parsed = parseDoctorArgs([]);
+    expect(parsed.json).toBe(false);
+  });
+
+  test("parses --json and string flags together", () => {
+    const parsed = parseDoctorArgs([
+      "--json",
+      "--registry",
+      "ui",
+      "--cwd",
+      "packages/ui",
+    ]);
+    expect(parsed.json).toBe(true);
+    expect(parsed.registry).toBe("ui");
+    expect(parsed.cwd).toBe("packages/ui");
   });
 });
 
@@ -87,46 +203,5 @@ describe("resolveCwd", () => {
     } finally {
       rmSync(tempDir, { force: true, recursive: true });
     }
-  });
-});
-
-describe("parseComponentArgs", () => {
-  test("returns positional args, excluding flags", () => {
-    expect(parseComponentArgs(["card", "--force", "accordion"])).toEqual([
-      "card",
-      "accordion",
-    ]);
-  });
-
-  test("excludes the value following a value-taking flag", () => {
-    expect(
-      parseComponentArgs(["--registry", "ui", "card", "--path", "src/ui"])
-    ).toEqual(["card"]);
-  });
-
-  test("excludes values for --cwd and its -c alias", () => {
-    expect(parseComponentArgs(["--cwd", "packages/ui", "card"])).toEqual([
-      "card",
-    ]);
-    expect(parseComponentArgs(["-c", "packages/ui", "card"])).toEqual(["card"]);
-  });
-
-  test("returns an empty array when only flags are given", () => {
-    expect(parseComponentArgs(["--force", "--yes"])).toEqual([]);
-  });
-
-  test("returns an empty array for an empty list", () => {
-    expect(parseComponentArgs([])).toEqual([]);
-  });
-
-  test("treats a value-taking flag's value as positional if it appears first", () => {
-    // "card" is not preceded by anything, so it's always positional.
-    expect(parseComponentArgs(["card"])).toEqual(["card"]);
-  });
-
-  test("keeps multiple component names", () => {
-    expect(
-      parseComponentArgs(["card", "accordion", "--force", "tooltip"])
-    ).toEqual(["card", "accordion", "tooltip"]);
   });
 });

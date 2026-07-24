@@ -1,44 +1,57 @@
 import { existsSync, statSync } from "node:fs";
 import { resolve } from "node:path";
+import { parse } from "@bomb.sh/args";
 import { error } from "@/utils/colors.js";
 
-export function parseFlag(
-  argList: string[],
-  ...flags: string[]
-): string | undefined {
-  for (const flag of flags) {
-    const index = argList.indexOf(flag);
-    if (index !== -1) {
-      return argList[index + 1];
-    }
-  }
+const ADD_CONFIG = {
+  alias: { c: "cwd", f: "force", s: "silent", y: "yes" },
+  // Include short aliases: boolean only covers listed names (--force, not -f).
+  boolean: ["force", "f", "yes", "y", "dry-run", "silent", "s", "view"],
+  default: {
+    "dry-run": false,
+    force: false,
+    silent: false,
+    view: false,
+    yes: false,
+  },
+
+  string: ["path", "registry", "cwd"],
+} as const;
+
+const LIST_CONFIG = {
+  boolean: ["json"],
+  default: { json: false },
+  string: ["registry"],
+} as const;
+
+const DIFF_CONFIG = {
+  alias: { c: "cwd" },
+  string: ["path", "registry", "cwd"],
+} as const;
+
+const DOCTOR_CONFIG = {
+  alias: { c: "cwd" },
+  boolean: ["json"],
+  default: { json: false },
+  string: ["path", "registry", "cwd"],
+} as const;
+
+export function parseAddArgs(argv: string[]) {
+  return parse(argv, ADD_CONFIG);
 }
 
-const FLAGS_TAKING_A_VALUE = new Set(["--path", "--registry", "--cwd", "-c"]);
-
-/**
- * Everything in `argList` that isn't a flag (`-`-prefixed) or the value
- * immediately following a value-taking flag — i.e. the positional
- * component names for `add`/`diff`.
- */
-export function parseComponentArgs(argList: string[]): string[] {
-  return argList.filter((arg, i) => {
-    if (arg.startsWith("-")) {
-      return false;
-    }
-    const prev = argList[i - 1];
-    return prev === undefined || !FLAGS_TAKING_A_VALUE.has(prev);
-  });
+export function parseListArgs(argv: string[]) {
+  return parse(argv, LIST_CONFIG);
 }
 
-/**
- * Resolves `--cwd` to an absolute path that gets threaded explicitly through
- * every command (detectConfig, writeComponent, installDependencies, ...)
- * rather than a global `process.chdir()` — mirrors how a monorepo workspace
- * like `packages/ui` gets its own tsconfig/components.json read instead of
- * the repo root's, without the process-wide side effect of actually
- * changing directory (which isn't parallel- or test-safe).
- */
+export function parseDiffArgs(argv: string[]) {
+  return parse(argv, DIFF_CONFIG);
+}
+
+export function parseDoctorArgs(argv: string[]) {
+  return parse(argv, DOCTOR_CONFIG);
+}
+
 export function resolveCwd(cwd: string | undefined): string | null {
   if (!cwd) {
     return process.cwd();

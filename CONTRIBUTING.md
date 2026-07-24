@@ -15,12 +15,25 @@ sora-cli is a single-package CLI built with Bun and bundled with tsup.
 
 ```text
 src/
-├── index.ts        CLI entry point
-├── constants.ts     Registry base URLs for each Sora Labs product
-├── types.ts         Shared types
-├── commands/         `add` and `list` command implementations
-├── prompts/          Interactive prompts (component picker, etc.)
-└── utils/            Registry fetching, dependency resolution, file writing, package manager detection
+├── index.ts            CLI entry point, command routing, help/version
+├── constants.ts        Registry base URLs for each Sora Labs product
+├── types.ts            Shared types
+├── commands/           Command implementations
+│   ├── add.ts          `add` command - install components
+│   ├── list.ts         `list` command - list available components
+│   ├── diff.ts         `diff` command - compare installed vs registry
+│   └── doctor.ts       `doctor` command - project diagnostics
+├── prompts/            Interactive prompts (component picker, etc.)
+└── utils/              Shared utilities
+    ├── args.ts         Type-safe argument parsing with @bomb.sh/args
+    ├── registry.ts     Registry fetching and validation
+    ├── tree.ts         Dependency tree resolution
+    ├── install.ts      File writing and dependency installation
+    ├── detect.ts       Project config detection (package manager, aliases)
+    ├── diff.ts         File-level diff engine
+    ├── colors.ts       Output formatting (stdout/stderr routing)
+    ├── spinner.ts      Clack spinner wrapper
+    └── update-check.ts Non-blocking npm version check
 ```
 
 The CLI works by fetching a shadcn-compatible registry (`<product-url>/r/registry.json`, `<product-url>/r/<name>.json`), resolving the dependency tree, writing files into the user's project, and installing dependencies with their detected package manager (bun/pnpm/yarn/npm).
@@ -69,6 +82,7 @@ Adding a new Sora Labs product as a source should only require adding an entry t
 - Keep command logic in `src/commands/`, prompt/UI logic in `src/prompts/`, and reusable helpers (registry fetching, dependency resolution, file writing, package-manager detection) in `src/utils/`. Avoid duplicating logic across commands.
 - Preserve existing CLI flags and behavior (`--path`, `--force`, `--registry`) unless a change is explicitly agreed on in an issue, since these are part of the public interface documented in the [README](README.md).
 - When adding or changing a flag, update the `Usage`/`Options` section of the README to match.
+- Argument parsing uses `@bomb.sh/args` for type safety. When adding a new command, create a typed parse function in `src/utils/args.ts` with the appropriate config (boolean, string, alias, default).
 - Test against a real target project directory when changing file-writing or dependency-resolution logic — a stale `dist/` bundle can hide real behavior, so rebuild before testing.
 - Keep output messages (spinners, prompts, errors) consistent with the existing `@clack/prompts` / `picocolors` style already used in the codebase.
 
@@ -77,11 +91,13 @@ Adding a new Sora Labs product as a source should only require adding an entry t
 Run these before opening a pull request:
 
 ```bash
-bun run typecheck
-bun run build
+bun run typecheck    # TypeScript type checking
+bun test             # run test suite (247 tests)
+bun run build        # bundle for distribution
+bun x ultracite fix  # auto-fix lint issues
 ```
 
-There is currently no automated test suite; manually verify the commands you touched (`add`, `list`, relevant flags) against a scratch project.
+The test suite covers argument parsing, registry fetching, dependency resolution, file writing, and command behavior. Tests use `bun:test` and mock external dependencies (fetch, child_process).
 
 ## Submitting a pull request
 

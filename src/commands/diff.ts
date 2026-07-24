@@ -1,6 +1,6 @@
 import { outro } from "@clack/prompts";
 import type { RegistryItem } from "@/types.js";
-import { error } from "@/utils/colors.js";
+import { error, sanitize } from "@/utils/colors.js";
 import { detectConfig } from "@/utils/detect.js";
 import { diffComponentFiles, printFileDiff } from "@/utils/diff.js";
 import { spinner } from "@/utils/spinner.js";
@@ -40,7 +40,7 @@ async function resolveComponentsForDiff(
       }
     } catch (err) {
       loadingSpinner.error(`Failed to resolve ${name}`);
-      error((err as Error).message);
+      error(sanitize((err as Error).message));
       return null;
     }
   }

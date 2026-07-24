@@ -2,8 +2,14 @@ import { add } from "@/commands/add.js";
 import { diff } from "@/commands/diff.js";
 import { doctor } from "@/commands/doctor.js";
 import { list } from "@/commands/list.js";
-import { parseComponentArgs, parseFlag, resolveCwd } from "@/utils/args.js";
-import { error, header } from "@/utils/colors.js";
+import {
+  parseAddArgs,
+  parseDiffArgs,
+  parseDoctorArgs,
+  parseListArgs,
+  resolveCwd,
+} from "@/utils/args.js";
+import { error, header, sanitize } from "@/utils/colors.js";
 import { printUpdateNotice, startUpdateCheck } from "@/utils/update-check.js";
 
 declare const __VERSION__: string;
@@ -76,30 +82,23 @@ function printHelp(): void {
 }
 
 async function runAdd(): Promise<void> {
-  const rest = args.slice(1);
-  const cwd = resolveCwd(parseFlag(rest, "--cwd", "-c"));
+  const parsed = parseAddArgs(args.slice(1));
+  const cwd = resolveCwd(parsed.cwd);
   if (cwd === null) {
     process.exitCode = 1;
     return;
   }
-  const path = parseFlag(rest, "--path");
-  const registry = parseFlag(rest, "--registry");
-  const force = rest.includes("--force") || rest.includes("-f");
-  const yes = rest.includes("--yes") || rest.includes("-y");
-  const dryRun = rest.includes("--dry-run");
-  const silent = rest.includes("--silent") || rest.includes("-s");
-  const view = rest.includes("--view");
-  const componentArgs = parseComponentArgs(rest);
+  const componentArgs = parsed._.map(String);
 
   const ok = await add(componentArgs, {
     cwd,
-    dryRun,
-    force,
-    path,
-    registry,
-    silent,
-    view,
-    yes,
+    dryRun: parsed["dry-run"],
+    force: parsed.force,
+    path: parsed.path,
+    registry: parsed.registry,
+    silent: parsed.silent,
+    view: parsed.view,
+    yes: parsed.yes,
   });
   if (!ok) {
     process.exitCode = 1;
@@ -107,41 +106,43 @@ async function runAdd(): Promise<void> {
 }
 
 async function runList(): Promise<void> {
-  const rest = args.slice(1);
-  const json = rest.includes("--json");
-  const registry = parseFlag(rest, "--registry");
-  await list({ json, registry });
+  const parsed = parseListArgs(args.slice(1));
+  await list({ json: parsed.json, registry: parsed.registry });
 }
 
 async function runDiff(): Promise<void> {
-  const rest = args.slice(1);
-  const cwd = resolveCwd(parseFlag(rest, "--cwd", "-c"));
+  const parsed = parseDiffArgs(args.slice(1));
+  const cwd = resolveCwd(parsed.cwd);
   if (cwd === null) {
     process.exitCode = 1;
     return;
   }
-  const path = parseFlag(rest, "--path");
-  const registry = parseFlag(rest, "--registry");
-  const componentArgs = parseComponentArgs(rest);
+  const componentArgs = parsed._.map(String);
 
-  const ok = await diff(componentArgs, { cwd, path, registry });
+  const ok = await diff(componentArgs, {
+    cwd,
+    path: parsed.path,
+    registry: parsed.registry,
+  });
   if (!ok) {
     process.exitCode = 1;
   }
 }
 
 async function runDoctor(): Promise<void> {
-  const rest = args.slice(1);
-  const cwd = resolveCwd(parseFlag(rest, "--cwd", "-c"));
+  const parsed = parseDoctorArgs(args.slice(1));
+  const cwd = resolveCwd(parsed.cwd);
   if (cwd === null) {
     process.exitCode = 1;
     return;
   }
-  const path = parseFlag(rest, "--path");
-  const registry = parseFlag(rest, "--registry");
-  const json = rest.includes("--json");
 
-  const ok = await doctor(__VERSION__, { cwd, json, path, registry });
+  const ok = await doctor(__VERSION__, {
+    cwd,
+    json: parsed.json,
+    path: parsed.path,
+    registry: parsed.registry,
+  });
   if (!ok) {
     process.exitCode = 1;
   }
@@ -199,7 +200,7 @@ async function main(): Promise<void> {
     }
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    error(msg || "An unknown error occurred");
+    error(sanitize(msg) || "An unknown error occurred");
     process.exit(1);
   }
 }
