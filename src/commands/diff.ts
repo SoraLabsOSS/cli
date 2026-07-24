@@ -38,7 +38,7 @@ async function resolveComponentsForDiff(
         }
       }
     } catch (err) {
-      loadingSpinner.stop(`Failed to resolve ${name}`, 1);
+      loadingSpinner.error(`Failed to resolve ${name}`);
       error((err as Error).message);
       return null;
     }

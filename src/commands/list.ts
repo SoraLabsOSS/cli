@@ -14,7 +14,7 @@ export async function list(options: ListOptions): Promise<void> {
   try {
     data = await fetchRegistry(options.registry);
   } catch (err) {
-    loadingSpinner?.stop("Failed to fetch registry", 1);
+    loadingSpinner?.error("Failed to fetch registry");
     throw err;
   }
   loadingSpinner?.stop("Fetched registry");

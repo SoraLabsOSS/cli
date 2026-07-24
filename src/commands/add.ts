@@ -58,7 +58,7 @@ async function pickComponents(registry?: string): Promise<string[] | null> {
   try {
     availableComponents = await getAvailableComponents(registry);
   } catch (err) {
-    loadingSpinner.stop("Failed to fetch available components", 1);
+    loadingSpinner.error("Failed to fetch available components");
     throw err;
   }
   loadingSpinner.stop("Fetched available components");
@@ -123,7 +123,7 @@ async function resolveComponents(
 
       trees.push(tree);
     } catch (err) {
-      loadingSpinner.stop(`Failed to resolve ${name}`, 1);
+      loadingSpinner.error(`Failed to resolve ${name}`);
       error((err as Error).message);
       return null;
     }
@@ -351,7 +351,7 @@ async function installNpmDependencies(
     return;
   }
 
-  loadingSpinner.stop("Failed to install dependencies", 1);
+  loadingSpinner.error("Failed to install dependencies");
   if (result.stderr) {
     note(result.stderr, "Error");
   }
