@@ -103,6 +103,7 @@ describe("doctor", () => {
     writeJson(tempDir, "package.json", {
       dependencies: { clsx: "^2.0.0", react: "^18.0.0", tailwindcss: "^4.0.0" },
     });
+    writeFileSync(join(tempDir, "package-lock.json"), "{}", "utf8");
     writeJson(tempDir, "tsconfig.json", {
       compilerOptions: { paths: { "@/*": ["./src/*"] } },
     });
@@ -112,7 +113,7 @@ describe("doctor", () => {
 
     expect(ok).toBe(true);
     const results = getJsonResults();
-    expect(results.every((r) => r.status !== "fail")).toBe(true);
+    expect(results.every((r) => r.status === "pass")).toBe(true);
   });
 
   test("fails overall when the registry is unreachable", async () => {
@@ -135,6 +136,34 @@ describe("doctor", () => {
     await doctor("0.0.1", { cwd: tempDir, json: true });
 
     expect(resultFor("package-manager")?.status).toBe("warn");
+  });
+
+  test("warns instead of a misleading pass when run outside any Node project", async () => {
+    restoreFetch = mockFetch({});
+    // No package.json/lockfile anywhere — e.g. running `sora doctor` from a
+    // bare home directory, not a project at all.
+
+    await doctor("0.0.1", { cwd: tempDir, json: true });
+
+    const projectResult = resultFor("project-root");
+    expect(projectResult?.status).toBe("warn");
+    expect(projectResult?.message).toContain(
+      "doesn't look like a Node.js project"
+    );
+    const pmResult = resultFor("package-manager");
+    expect(pmResult?.status).toBe("warn");
+    expect(pmResult?.message).toContain("doesn't look like a Node.js project");
+  });
+
+  test("project-root passes when package.json exists anywhere up the tree", async () => {
+    restoreFetch = mockFetch({});
+    const nested = join(tempDir, "a", "b");
+    mkdirSync(nested, { recursive: true });
+    writeJson(tempDir, "package.json", { name: "root-only" });
+
+    await doctor("0.0.1", { cwd: nested, json: true });
+
+    expect(resultFor("project-root")?.status).toBe("pass");
   });
 
   test("fails on invalid components.json", async () => {

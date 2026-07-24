@@ -4,6 +4,7 @@ import type { ProjectConfig } from "@/types.js";
 import { active, bar, done, error, sanitize, warn } from "@/utils/colors.js";
 import {
   detectConfig,
+  findPackageManagerEvidence,
   getInstalledDependencyNames,
   isAstroProject,
   LOCKFILES,
@@ -105,6 +106,41 @@ function checkNodeVersion(): CheckResult {
   };
 }
 
+/**
+ * Walks up from cwd looking for a package.json — the most basic signal that
+ * this is a Node.js project at all. Run first and surfaced prominently so a
+ * user who runs `sora doctor` from a random directory (e.g. their home
+ * folder) immediately understands why every check below it is either a
+ * "not found, that's fine" pass or a "defaulting to X" warning, rather than
+ * being misled by a wall of green checkmarks into thinking everything's set
+ * up correctly.
+ */
+function checkProjectRoot(cwd: string): CheckResult {
+  let dir = cwd;
+  for (;;) {
+    if (existsSync(join(dir, "package.json"))) {
+      return {
+        id: "project-root",
+        label: "Project",
+        message: "package.json found.",
+        status: "pass",
+      };
+    }
+    const parent = dirname(dir);
+    if (parent === dir) {
+      break;
+    }
+    dir = parent;
+  }
+  return {
+    id: "project-root",
+    label: "Project",
+    message:
+      "No package.json found in this directory or any parent — this doesn't look like a Node.js project. Run doctor from inside your project.",
+    status: "warn",
+  };
+}
+
 function checkPackageManager(config: ProjectConfig): CheckResult {
   const found = LOCKFILES.filter(([file]) =>
     existsSync(join(config.cwd, file))
@@ -115,6 +151,14 @@ function checkPackageManager(config: ProjectConfig): CheckResult {
       id: "package-manager",
       label: "Package manager",
       message: `Detected ${config.packageManager}, but multiple lockfiles found (${names}) — this can install packages with the wrong tool.`,
+      status: "warn",
+    };
+  }
+  if (!findPackageManagerEvidence(config.cwd)) {
+    return {
+      id: "package-manager",
+      label: "Package manager",
+      message: `No lockfile or "packageManager" field found in this directory or any parent — defaulting to ${config.packageManager}. This doesn't look like a Node.js project.`,
       status: "warn",
     };
   }
@@ -374,6 +418,7 @@ export async function doctor(
   }
 
   const syncResults: CheckResult[] = [
+    checkProjectRoot(cwd),
     checkNodeVersion(),
     checkPackageManager(config),
     checkComponentsJson(cwd),

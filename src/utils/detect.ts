@@ -45,11 +45,13 @@ function readPackageManagerField(dir: string): PackageManager | null {
 }
 
 /**
- * Walk up from cwd looking for a lockfile or a `packageManager` field, so
- * this resolves correctly when run from inside a workspace package whose
- * lockfile lives at the monorepo root (e.g. a Bun/pnpm/Turbo workspace).
+ * Walks up from cwd looking for a lockfile or a `packageManager` field,
+ * returning whichever it found first (or null if nothing turned up all the
+ * way to the filesystem root). Exported so doctor's package-manager check
+ * can tell a real detection from detectPackageManager's bare "npm" fallback
+ * — e.g. running `sora doctor` outside any Node project at all.
  */
-function detectPackageManager(cwd: string): PackageManager {
+export function findPackageManagerEvidence(cwd: string): PackageManager | null {
   let dir = cwd;
 
   for (;;) {
@@ -66,12 +68,20 @@ function detectPackageManager(cwd: string): PackageManager {
 
     const parent = dirname(dir);
     if (parent === dir) {
-      break;
+      return null;
     }
     dir = parent;
   }
+}
 
-  return "npm";
+/**
+ * Walk up from cwd looking for a lockfile or a `packageManager` field, so
+ * this resolves correctly when run from inside a workspace package whose
+ * lockfile lives at the monorepo root (e.g. a Bun/pnpm/Turbo workspace).
+ * Defaults to "npm" when nothing is found anywhere.
+ */
+function detectPackageManager(cwd: string): PackageManager {
+  return findPackageManagerEvidence(cwd) ?? "npm";
 }
 
 function detectAlias(cwd: string): {
