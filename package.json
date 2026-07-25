@@ -26,7 +26,7 @@
     "prepare": "lefthook install"
   },
   "type": "module",
-  "version": "0.4.4",
+  "version": "0.4.5",
   "description": "CLI to install components from any shadcn-compatible registry — defaults to Sora UI and other Sora Labs products",
   "license": "MIT",
   "author": "Axyl1410",
