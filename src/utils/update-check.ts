@@ -21,6 +21,23 @@ export function isNewer(latest: string, current: string): boolean {
 }
 
 /**
+ * Fetches the latest published version from the npm registry, or null when
+ * it can't be determined (network error, timeout, non-ok or malformed
+ * response). Never throws. Doctor calls this directly (with a longer
+ * budget) so it can tell "couldn't check" apart from "up to date".
+ */
+export function fetchLatestVersion(
+  timeoutMs = CHECK_TIMEOUT_MS
+): Promise<string | null> {
+  return fetch(REGISTRY_URL, { signal: AbortSignal.timeout(timeoutMs) })
+    .then((res) =>
+      res.ok ? (res.json() as Promise<{ version?: string }>) : null
+    )
+    .then((data) => data?.version ?? null)
+    .catch(() => null);
+}
+
+/**
  * Best-effort, non-blocking check against the npm registry for a newer
  * published version. Kicked off in parallel with the command's own work
  * and only awaited (with a short budget) right before the process exits —
@@ -35,15 +52,9 @@ export function startUpdateCheck(
     return Promise.resolve(null);
   }
 
-  return fetch(REGISTRY_URL, { signal: AbortSignal.timeout(CHECK_TIMEOUT_MS) })
-    .then((res) =>
-      res.ok ? (res.json() as Promise<{ version?: string }>) : null
-    )
-    .then((data) => {
-      const latest = data?.version;
-      return latest && isNewer(latest, currentVersion) ? latest : null;
-    })
-    .catch(() => null);
+  return fetchLatestVersion().then((latest) =>
+    latest && isNewer(latest, currentVersion) ? latest : null
+  );
 }
 
 export function printUpdateNotice(latest: string, current: string): void {

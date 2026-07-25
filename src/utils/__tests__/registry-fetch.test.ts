@@ -8,6 +8,7 @@ import {
 const REGISTRY_NOT_FOUND = /Registry not found/;
 const RATE_LIMITED = /429.*rate limited/;
 const COULD_NOT_REACH = /Could not reach/;
+const TIMED_OUT = /timed out after 15s/;
 const INVALID_JSON = /invalid JSON/;
 const MALFORMED_REGISTRY = /Malformed registry/;
 const COMPONENT_NOT_FOUND = /Component "nonexistent" not found/;
@@ -96,6 +97,13 @@ describe("fetchRegistry", () => {
       throw new TypeError("fetch failed");
     });
     await expect(fetchRegistry()).rejects.toThrow(COULD_NOT_REACH);
+  });
+
+  test("throws a clear timeout message when the request times out", async () => {
+    restore = mockFetch(() => {
+      throw new DOMException("The operation timed out.", "TimeoutError");
+    });
+    await expect(fetchRegistry()).rejects.toThrow(TIMED_OUT);
   });
 
   test("throws on invalid JSON", async () => {

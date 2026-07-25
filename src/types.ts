@@ -63,4 +63,12 @@ export interface ProjectConfig {
   cwd: string;
   packageManager: PackageManager;
   srcDir: string;
+  /**
+   * True only when the alias came from a tsconfig/jsconfig `paths` entry.
+   * `components.json` aliases satisfy `aliasConfigured` but don't make a
+   * bundler resolve anything — Astro's Vite build needs the tsconfig entry
+   * (plus a Vite alias), so its checks must look at this, not the merged
+   * flag.
+   */
+  tsconfigPathsConfigured: boolean;
 }

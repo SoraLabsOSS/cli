@@ -212,5 +212,6 @@ export function detectConfig(cwd: string): ProjectConfig {
     cwd,
     packageManager: detectPackageManager(cwd),
     srcDir,
+    tsconfigPathsConfigured: configured,
   };
 }

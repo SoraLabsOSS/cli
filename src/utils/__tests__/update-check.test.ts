@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, spyOn, test } from "bun:test";
 import {
+  fetchLatestVersion,
   isNewer,
   parseVersionParts,
   printUpdateNotice,
@@ -94,6 +95,35 @@ afterEach(() => {
   restoreFetch?.();
   restoreFetch = undefined;
   delete process.env.SORA_NO_UPDATE_CHECK;
+});
+
+describe("fetchLatestVersion", () => {
+  test("returns the published version even when it isn't newer", async () => {
+    restoreFetch = mockFetch(() => jsonResponse({ version: "0.1.0" }));
+
+    expect(await fetchLatestVersion()).toBe("0.1.0");
+  });
+
+  test("returns null on a network failure", async () => {
+    restoreFetch = mockFetch(() => {
+      throw new TypeError("fetch failed");
+    });
+
+    expect(await fetchLatestVersion()).toBeNull();
+  });
+
+  test("returns null on a non-ok response", async () => {
+    restoreFetch = mockFetch(() => new Response("boom", { status: 500 }));
+
+    expect(await fetchLatestVersion()).toBeNull();
+  });
+
+  test("still fetches when SORA_NO_UPDATE_CHECK is set (env guard is the caller's job)", async () => {
+    process.env.SORA_NO_UPDATE_CHECK = "1";
+    restoreFetch = mockFetch(() => jsonResponse({ version: "1.2.3" }));
+
+    expect(await fetchLatestVersion()).toBe("1.2.3");
+  });
 });
 
 describe("startUpdateCheck", () => {

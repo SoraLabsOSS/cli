@@ -19,6 +19,14 @@ export function cn(...inputs: ClassValue[]) {
 `;
 
 /**
+ * Single source of truth for where the `cn` helper lives — doctor checks
+ * the same path add installs to, so the two can't drift apart.
+ */
+export function utilsFilePath(cwd: string, srcDir: string): string {
+  return join(cwd, srcDir, "lib", "utils.ts");
+}
+
+/**
  * shadcn's base "utils" registry dependency (the \`cn\` helper) isn't
  * fetchable from a product registry — write it directly if the target
  * project doesn't already have it.
@@ -28,7 +36,7 @@ export function ensureUtils(
   srcDir: string,
   dryRun = false
 ): "written" | "exists" {
-  const destPath = join(cwd, srcDir, "lib", "utils.ts");
+  const destPath = utilsFilePath(cwd, srcDir);
   if (existsSync(destPath)) {
     return "exists";
   }

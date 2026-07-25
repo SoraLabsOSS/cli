@@ -5,12 +5,12 @@ import { active, bar, done, error, sanitize, warn } from "@/utils/colors.js";
 import {
   detectConfig,
   findPackageManagerEvidence,
-  getInstalledDependencyNames,
   isAstroProject,
   LOCKFILES,
 } from "@/utils/detect.js";
+import { utilsFilePath } from "@/utils/install.js";
 import { fetchRegistry } from "@/utils/registry.js";
-import { startUpdateCheck } from "@/utils/update-check.js";
+import { fetchLatestVersion, isNewer } from "@/utils/update-check.js";
 
 type CheckStatus = "fail" | "pass" | "warn";
 
@@ -24,11 +24,14 @@ interface CheckResult {
 interface DoctorOptions {
   cwd?: string;
   json?: boolean;
-  path?: string;
   registry?: string;
 }
 
 const MIN_NODE_MAJOR = 18;
+// Doctor is an explicit diagnostics run, so it can afford a longer budget
+// than the fire-and-forget check other commands use — a slow network
+// should produce a real answer here, not a false "couldn't reach npm".
+const UPDATE_CHECK_TIMEOUT_MS = 5000;
 const TAILWIND_CONFIG_FILES = [
   "tailwind.config.js",
   "tailwind.config.ts",
@@ -39,6 +42,7 @@ const TAILWIND_CONFIG_FILES = [
 interface PackageJsonShape {
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
+  peerDependencies?: Record<string, string>;
 }
 
 function readPackageJson(cwd: string): PackageJsonShape | null {
@@ -57,7 +61,12 @@ function getDepVersion(
   pkg: PackageJsonShape | null,
   name: string
 ): string | null {
-  return pkg?.dependencies?.[name] ?? pkg?.devDependencies?.[name] ?? null;
+  return (
+    pkg?.dependencies?.[name] ??
+    pkg?.devDependencies?.[name] ??
+    pkg?.peerDependencies?.[name] ??
+    null
+  );
 }
 
 /**
@@ -65,17 +74,19 @@ function getDepVersion(
  * mirrors detectPackageManager's ancestor walk, since a workspace package
  * (e.g. `packages/ui` in a Turborepo/Bun/pnpm monorepo) commonly relies on
  * a shared devDependency like tailwindcss or react declared once at the
- * monorepo root rather than duplicated in every package.json.
+ * monorepo root rather than duplicated in every package.json. Returns the
+ * directory it was found in so related file checks (e.g. tailwind.config)
+ * can search the same span instead of just cwd.
  */
-function findAncestorDependencyVersion(
+function findAncestorDependency(
   cwd: string,
   name: string
-): string | null {
+): { dir: string; version: string } | null {
   let dir = cwd;
   for (;;) {
     const version = getDepVersion(readPackageJson(dir), name);
     if (version) {
-      return version;
+      return { dir, version };
     }
     const parent = dirname(dir);
     if (parent === dir) {
@@ -145,7 +156,10 @@ function checkPackageManager(config: ProjectConfig): CheckResult {
   const found = LOCKFILES.filter(([file]) =>
     existsSync(join(config.cwd, file))
   );
-  if (found.length > 1) {
+  // Count distinct managers, not files — bun.lock + bun.lockb (left behind
+  // by bun's lockfile-format migration) both mean bun, which is unambiguous.
+  const managers = new Set(found.map(([, manager]) => manager));
+  if (managers.size > 1) {
     const names = found.map(([file]) => file).join(", ");
     return {
       id: "package-manager",
@@ -219,7 +233,10 @@ function checkAstroAlias(config: ProjectConfig): CheckResult | null {
   if (!isAstroProject(config.cwd)) {
     return null;
   }
-  if (config.aliasConfigured) {
+  // components.json aliases don't count here: Astro's Vite build resolves
+  // imports via tsconfig paths (plus a Vite alias), so only a real
+  // tsconfig/jsconfig entry means the written imports will work.
+  if (config.tsconfigPathsConfigured) {
     return {
       id: "astro-alias",
       label: "Astro path alias",
@@ -260,9 +277,32 @@ function parseMajorVersion(version: string): number | null {
   return match?.[1] ? Number.parseInt(match[1], 10) : null;
 }
 
+/**
+ * Searches for a tailwind config from cwd up to (and including) stopDir —
+ * the span between a workspace package and the monorepo root where its
+ * tailwindcss dependency was declared. Bounded so an unrelated config
+ * somewhere above the project can't produce a false pass.
+ */
+function hasTailwindConfigUpTo(cwd: string, stopDir: string): boolean {
+  let dir = cwd;
+  for (;;) {
+    if (TAILWIND_CONFIG_FILES.some((file) => existsSync(join(dir, file)))) {
+      return true;
+    }
+    if (dir === stopDir) {
+      return false;
+    }
+    const parent = dirname(dir);
+    if (parent === dir) {
+      return false;
+    }
+    dir = parent;
+  }
+}
+
 function checkTailwind(cwd: string): CheckResult {
-  const version = findAncestorDependencyVersion(cwd, "tailwindcss");
-  if (!version) {
+  const dep = findAncestorDependency(cwd, "tailwindcss");
+  if (!dep) {
     return {
       id: "tailwind",
       label: "Tailwind CSS",
@@ -272,24 +312,21 @@ function checkTailwind(cwd: string): CheckResult {
     };
   }
 
-  const major = parseMajorVersion(version);
+  const major = parseMajorVersion(dep.version);
   if (major !== null && major < 3) {
     return {
       id: "tailwind",
       label: "Tailwind CSS",
-      message: `Version ${version} detected — Sora UI components require Tailwind v3 or later.`,
+      message: `Version ${dep.version} detected — Sora UI components require Tailwind v3 or later.`,
       status: "warn",
     };
   }
 
-  if (
-    major === 3 &&
-    !TAILWIND_CONFIG_FILES.some((file) => existsSync(join(cwd, file)))
-  ) {
+  if (major === 3 && !hasTailwindConfigUpTo(cwd, dep.dir)) {
     return {
       id: "tailwind",
       label: "Tailwind CSS",
-      message: `Version ${version} detected, but no tailwind.config.{js,ts,cjs,mjs} found.`,
+      message: `Version ${dep.version} detected, but no tailwind.config.{js,ts,cjs,mjs} found.`,
       status: "warn",
     };
   }
@@ -301,14 +338,14 @@ function checkTailwind(cwd: string): CheckResult {
   return {
     id: "tailwind",
     label: "Tailwind CSS",
-    message: `Version ${version} detected.${note}`,
+    message: `Version ${dep.version} detected.${note}`,
     status: "pass",
   };
 }
 
 function checkReact(cwd: string): CheckResult {
-  const version = findAncestorDependencyVersion(cwd, "react");
-  if (!version) {
+  const dep = findAncestorDependency(cwd, "react");
+  if (!dep) {
     return {
       id: "react",
       label: "React",
@@ -320,13 +357,13 @@ function checkReact(cwd: string): CheckResult {
   return {
     id: "react",
     label: "React",
-    message: `Version ${version} detected.`,
+    message: `Version ${dep.version} detected.`,
     status: "pass",
   };
 }
 
 function checkUtilsDeps(config: ProjectConfig): CheckResult {
-  const utilsPath = join(config.cwd, config.srcDir, "lib", "utils.ts");
+  const utilsPath = utilsFilePath(config.cwd, config.srcDir);
   if (!existsSync(utilsPath)) {
     return {
       id: "utils-deps",
@@ -336,9 +373,10 @@ function checkUtilsDeps(config: ProjectConfig): CheckResult {
     };
   }
 
-  const installed = getInstalledDependencyNames(config.cwd);
+  // Ancestor walk like the tailwind/react checks — in a monorepo these can
+  // legitimately be declared (or hoisted) at the workspace root.
   const missing = ["clsx", "tailwind-merge"].filter(
-    (dep) => !installed.has(dep)
+    (dep) => !findAncestorDependency(config.cwd, dep)
   );
   if (missing.length > 0) {
     return {
@@ -379,8 +417,26 @@ async function checkRegistry(
 }
 
 async function checkCliVersion(currentVersion: string): Promise<CheckResult> {
-  const latest = await startUpdateCheck(currentVersion);
-  if (latest) {
+  if (process.env.SORA_NO_UPDATE_CHECK) {
+    return {
+      id: "cli-version",
+      label: "sora-cli version",
+      message: `${currentVersion} (update check disabled via SORA_NO_UPDATE_CHECK)`,
+      status: "pass",
+    };
+  }
+
+  const latest = await fetchLatestVersion(UPDATE_CHECK_TIMEOUT_MS);
+  if (!latest) {
+    return {
+      id: "cli-version",
+      label: "sora-cli version",
+      message: `${currentVersion} installed — couldn't reach npm to check for a newer version.`,
+      status: "warn",
+    };
+  }
+
+  if (isNewer(latest, currentVersion)) {
     return {
       id: "cli-version",
       label: "sora-cli version",
@@ -388,6 +444,7 @@ async function checkCliVersion(currentVersion: string): Promise<CheckResult> {
       status: "warn",
     };
   }
+
   return {
     id: "cli-version",
     label: "sora-cli version",
@@ -413,9 +470,6 @@ export async function doctor(
 ): Promise<boolean> {
   const cwd = options.cwd ?? process.cwd();
   const config = detectConfig(cwd);
-  if (options.path) {
-    config.componentPath = options.path;
-  }
 
   const syncResults: CheckResult[] = [
     checkProjectRoot(cwd),

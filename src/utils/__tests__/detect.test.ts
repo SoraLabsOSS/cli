@@ -122,6 +122,7 @@ describe("detectConfig", () => {
     mkdirSync(join(tempDir, "src"));
     const config = detectConfig(tempDir);
     expect(config.aliasConfigured).toBe(true);
+    expect(config.tsconfigPathsConfigured).toBe(true);
     expect(config.aliases.components).toBe("@/components");
     expect(config.aliases.hooks).toBe("@/hooks");
     expect(config.aliases.lib).toBe("@/lib");
@@ -151,6 +152,9 @@ describe("detectConfig", () => {
     });
     const config = detectConfig(tempDir);
     expect(config.aliasConfigured).toBe(true);
+    // components.json alone doesn't wire up bundler resolution — the
+    // tsconfig-specific flag must stay false (see the Astro checks).
+    expect(config.tsconfigPathsConfigured).toBe(false);
     expect(config.aliases.components).toBe("~/ui");
     expect(config.aliases.hooks).toBe("~/shared/hooks");
     expect(config.aliases.utils).toBe("~/shared/lib/utils");

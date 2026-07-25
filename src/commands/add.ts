@@ -432,7 +432,7 @@ export async function add(
 
   done(`Detected: ${config.componentPath}/ (${config.packageManager})`);
   done(`Registry: ${registryUrl}`);
-  if (!config.aliasConfigured && isAstroProject(cwd)) {
+  if (!config.tsconfigPathsConfigured && isAstroProject(cwd)) {
     warn(
       `No "${config.aliases.components.split("/")[0]}/*" path alias found in tsconfig.json/jsconfig.json — Astro's Vite bundler won't resolve it on its own. Add a matching "compilerOptions.paths" entry plus a Vite alias (or install vite-tsconfig-paths) before installing, or the written imports won't resolve.`
     );

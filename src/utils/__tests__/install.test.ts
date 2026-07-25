@@ -223,6 +223,7 @@ describe("resolveTarget", () => {
     cwd: resolve("/project"),
     packageManager: "bun",
     srcDir: "src",
+    tsconfigPathsConfigured: true,
   };
 
   const makeItem = (name: string): RegistryItem => ({

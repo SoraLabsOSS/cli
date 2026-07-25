@@ -5,6 +5,10 @@ import { sanitize } from "@/utils/colors.js";
 const HTTP_URL = /^https?:\/\//;
 const TRAILING_SLASH = /\/$/;
 const LOCAL_HOSTNAMES = new Set(["127.0.0.1", "::1", "[::1]", "localhost"]);
+// Bounds every registry request — without it, a host that silently drops
+// packets (instead of refusing the connection) leaves commands hanging on
+// the OS-level TCP timeout, which can run over a minute.
+const FETCH_TIMEOUT_MS = 15_000;
 
 /**
  * A custom `--registry`/`SORA_REGISTRY_URL` value is fetched over the
@@ -90,8 +94,16 @@ async function fetchJson<T>(
 ): Promise<T> {
   let response: Response;
   try {
-    response = await fetch(url);
+    response = await fetch(url, {
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+    });
   } catch (err) {
+    if ((err as Error).name === "TimeoutError") {
+      throw new Error(
+        `Request to ${url} timed out after ${FETCH_TIMEOUT_MS / 1000}s. Check your network connection and try again.`,
+        { cause: err }
+      );
+    }
     const cause = (
       err as { cause?: { code?: string; message?: string } } | undefined
     )?.cause;

@@ -33,7 +33,7 @@ const DOCTOR_CONFIG = {
   alias: { c: "cwd" },
   boolean: ["json"],
   default: { json: false },
-  string: ["path", "registry", "cwd"],
+  string: ["registry", "cwd"],
 } as const;
 
 export function parseAddArgs(argv: string[]) {

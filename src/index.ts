@@ -140,7 +140,6 @@ async function runDoctor(): Promise<void> {
   const ok = await doctor(__VERSION__, {
     cwd,
     json: parsed.json,
-    path: parsed.path,
     registry: parsed.registry,
   });
   if (!ok) {
@@ -188,8 +187,13 @@ async function main(): Promise<void> {
 
     // Kicked off in parallel with the command itself so it never adds
     // latency; only checked (with its own short timeout) once the
-    // command's own work is done.
-    const updateCheck = startUpdateCheck(__VERSION__);
+    // command's own work is done. Doctor reports the CLI version as one
+    // of its own checks, so don't fire a second npm request (and a
+    // duplicate notice) for it.
+    const updateCheck =
+      command === "doctor"
+        ? Promise.resolve(null)
+        : startUpdateCheck(__VERSION__);
     try {
       await runCommand();
     } finally {

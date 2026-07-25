@@ -138,6 +138,16 @@ describe("doctor", () => {
     expect(resultFor("package-manager")?.status).toBe("warn");
   });
 
+  test("does not warn when both bun lockfile formats are present (same manager)", async () => {
+    restoreFetch = mockFetch({});
+    writeFileSync(join(tempDir, "bun.lock"), "{}", "utf8");
+    writeFileSync(join(tempDir, "bun.lockb"), "", "utf8");
+
+    await doctor("0.0.1", { cwd: tempDir, json: true });
+
+    expect(resultFor("package-manager")?.status).toBe("pass");
+  });
+
   test("warns instead of a misleading pass when run outside any Node project", async () => {
     restoreFetch = mockFetch({});
     // No package.json/lockfile anywhere — e.g. running `sora doctor` from a
@@ -228,6 +238,22 @@ describe("doctor", () => {
     expect(resultFor("astro-alias")?.status).toBe("pass");
   });
 
+  test("warns astro-alias when only components.json aliases exist (Vite needs tsconfig paths)", async () => {
+    restoreFetch = mockFetch({});
+    writeFileSync(
+      join(tempDir, "astro.config.mjs"),
+      "export default {}",
+      "utf8"
+    );
+    writeJson(tempDir, "components.json", {
+      aliases: { components: "@/components" },
+    });
+
+    await doctor("0.0.1", { cwd: tempDir, json: true });
+
+    expect(resultFor("astro-alias")?.status).toBe("warn");
+  });
+
   test("warns when tailwind is missing", async () => {
     restoreFetch = mockFetch({});
     writeJson(tempDir, "package.json", {});
@@ -289,6 +315,47 @@ describe("doctor", () => {
     const result = resultFor("tailwind");
     expect(result?.status).toBe("pass");
     expect(result?.message).toContain("v4 uses CSS-first config");
+  });
+
+  test("finds a tailwind v3 config at the monorepo root where the dependency is declared", async () => {
+    restoreFetch = mockFetch({});
+    const root = join(tempDir, "monorepo");
+    const workspacePkg = join(root, "packages", "ui");
+    mkdirSync(workspacePkg, { recursive: true });
+    writeJson(root, "package.json", {
+      devDependencies: { tailwindcss: "^3.4.0" },
+    });
+    writeFileSync(
+      join(root, "tailwind.config.ts"),
+      "export default {}",
+      "utf8"
+    );
+    writeJson(workspacePkg, "package.json", { name: "@workspace/ui" });
+
+    await doctor("0.0.1", { cwd: workspacePkg, json: true });
+
+    expect(resultFor("tailwind")?.status).toBe("pass");
+  });
+
+  test("ignores a tailwind config above where the dependency is declared", async () => {
+    restoreFetch = mockFetch({});
+    // Config lives at tempDir, but the dependency is declared one level
+    // deeper — an unrelated config above the project must not count.
+    writeFileSync(
+      join(tempDir, "tailwind.config.js"),
+      "module.exports = {}",
+      "utf8"
+    );
+    const project = join(tempDir, "project");
+    mkdirSync(project, { recursive: true });
+    writeJson(project, "package.json", {
+      dependencies: { tailwindcss: "^3.4.0" },
+    });
+
+    await doctor("0.0.1", { cwd: project, json: true });
+
+    expect(resultFor("tailwind")?.status).toBe("warn");
+    expect(resultFor("tailwind")?.message).toContain("no tailwind.config");
   });
 
   test("warns when react is missing", async () => {
@@ -369,6 +436,37 @@ describe("doctor", () => {
     expect(resultFor("utils-deps")?.status).toBe("fail");
   });
 
+  test("checks src/lib/utils.ts when the project uses a src directory", async () => {
+    restoreFetch = mockFetch({});
+    writeJson(tempDir, "tsconfig.json", {
+      compilerOptions: { paths: { "@/*": ["./src/*"] } },
+    });
+    mkdirSync(join(tempDir, "src", "lib"), { recursive: true });
+    writeFileSync(join(tempDir, "src", "lib", "utils.ts"), "export {}", "utf8");
+    writeJson(tempDir, "package.json", {});
+
+    const ok = await doctor("0.0.1", { cwd: tempDir, json: true });
+
+    expect(ok).toBe(false);
+    expect(resultFor("utils-deps")?.status).toBe("fail");
+  });
+
+  test("passes utils-deps when clsx/tailwind-merge live at the monorepo root", async () => {
+    restoreFetch = mockFetch({});
+    const root = join(tempDir, "monorepo");
+    const workspacePkg = join(root, "packages", "ui");
+    mkdirSync(join(workspacePkg, "lib"), { recursive: true });
+    writeJson(root, "package.json", {
+      dependencies: { clsx: "^2.0.0", "tailwind-merge": "^2.0.0" },
+    });
+    writeJson(workspacePkg, "package.json", { name: "@workspace/ui" });
+    writeFileSync(join(workspacePkg, "lib", "utils.ts"), "export {}", "utf8");
+
+    await doctor("0.0.1", { cwd: workspacePkg, json: true });
+
+    expect(resultFor("utils-deps")?.status).toBe("pass");
+  });
+
   test("warns with the latest version when a newer sora-cli is published", async () => {
     restoreFetch = mockFetch({ npmVersion: "9.9.9" });
 
@@ -393,7 +491,29 @@ describe("doctor", () => {
 
     await doctor("0.0.1", { cwd: tempDir, json: true });
 
-    expect(resultFor("cli-version")?.status).toBe("pass");
+    const result = resultFor("cli-version");
+    expect(result?.status).toBe("pass");
+    expect(result?.message).toContain("disabled via SORA_NO_UPDATE_CHECK");
+  });
+
+  test("warns cli-version when npm is unreachable instead of claiming up to date", async () => {
+    const original = globalThis.fetch;
+    globalThis.fetch = ((input: Parameters<typeof fetch>[0]) => {
+      const url = String(input);
+      if (url.includes("registry.npmjs.org")) {
+        return Promise.reject(new TypeError("fetch failed"));
+      }
+      return Promise.resolve(jsonResponse(REGISTRY_JSON));
+    }) as typeof fetch;
+    restoreFetch = () => {
+      globalThis.fetch = original;
+    };
+
+    await doctor("0.0.1", { cwd: tempDir, json: true });
+
+    const result = resultFor("cli-version");
+    expect(result?.status).toBe("warn");
+    expect(result?.message).toContain("couldn't reach npm");
   });
 
   test("human mode prints a pass/warn/fail summary line, warnings/failures on stderr", async () => {

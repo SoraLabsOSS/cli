@@ -30,6 +30,7 @@ function makeConfig(overrides?: Partial<ProjectConfig>): ProjectConfig {
     cwd: tempDir,
     packageManager: "bun",
     srcDir: "src",
+    tsconfigPathsConfigured: true,
     ...overrides,
   };
 }
