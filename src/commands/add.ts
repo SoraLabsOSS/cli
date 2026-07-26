@@ -1,3 +1,5 @@
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import {
   confirm,
   isCancel,
@@ -29,6 +31,7 @@ import {
   rewriteAliases,
   writeComponent,
 } from "@/utils/install.js";
+import { getMonorepoTargets, isMonorepoRoot } from "@/utils/monorepo.js";
 import {
   getAvailableComponents,
   resolveRegistryUrl,
@@ -407,6 +410,100 @@ async function performInstall(
 }
 
 /**
+ * Refuses to install into a directory with no `package.json` — mirrors
+ * shadcn's own "empty project" preflight check. Without this, `sora add`
+ * would happily write component files into any random folder, since
+ * `detectConfig` has no other signal that requires a real JS/TS project to
+ * be there.
+ */
+function guardEmptyProject(cwd: string): boolean {
+  if (existsSync(join(cwd, "package.json"))) {
+    return true;
+  }
+
+  error(
+    `No "package.json" found at ${sanitize(cwd)} — this doesn't look like a project.`
+  );
+  warn(
+    'Run "npm init" (or your package manager\'s equivalent) first, or pass --cwd to point at an existing project.'
+  );
+  return false;
+}
+
+/**
+ * Refuses to install straight into a monorepo root (pnpm/yarn/npm
+ * workspaces, Lerna, Nx). Installing there writes components into a
+ * directory with no framework of its own, using whichever workspace
+ * package's tsconfig alias happens to be found first — silently wrong for
+ * every workspace but one. A `components.json` at `cwd` is an explicit
+ * opt-in (matches shadcn's own CLI) and bypasses this check.
+ */
+function guardMonorepoRoot(cwd: string, componentNames: string[]): boolean {
+  if (existsSync(join(cwd, "components.json")) || !isMonorepoRoot(cwd)) {
+    return true;
+  }
+
+  error(
+    "This looks like a monorepo root — installing here could write files into the wrong workspace."
+  );
+  const targets = getMonorepoTargets(cwd);
+  const exampleArgs =
+    componentNames.length > 0 ? componentNames.join(" ") : "<component>";
+  if (targets.length > 0) {
+    warn("Re-run with --cwd pointing at a workspace, e.g.:");
+    for (const target of targets) {
+      bar(`  sora add ${exampleArgs} --cwd ${sanitize(target.name)}`);
+    }
+  } else {
+    warn(
+      "Re-run with --cwd pointing at the workspace you want to install into, or add a components.json file here to opt in explicitly."
+    );
+  }
+  return false;
+}
+
+/**
+ * Combines the "empty project" and "monorepo root" preflight checks (see
+ * shadcn's own `preFlightAdd`). Empty-project is checked first since a
+ * missing `package.json` makes the monorepo check meaningless anyway.
+ */
+function guardProject(cwd: string, componentNames: string[]): boolean {
+  return guardEmptyProject(cwd) && guardMonorepoRoot(cwd, componentNames);
+}
+
+/**
+ * Resolves the registry URL and prints the "Detected: .../ Registry: ..."
+ * header lines plus any setup warnings (Astro alias, dry run). Returns null
+ * if the registry couldn't be resolved (error already printed).
+ */
+function announceSetup(
+  config: ProjectConfig,
+  options: AddOptions
+): string | null {
+  let registryUrl: string;
+  try {
+    registryUrl = resolveRegistryUrl(options.registry);
+  } catch (err) {
+    error(sanitize((err as Error).message));
+    return null;
+  }
+
+  done(`Detected: ${config.componentPath}/ (${config.packageManager})`);
+  done(`Registry: ${registryUrl}`);
+  if (!config.tsconfigPathsConfigured && isAstroProject(config.cwd)) {
+    warn(
+      `No "${config.aliases.components.split("/")[0]}/*" path alias found in tsconfig.json/jsconfig.json — Astro's Vite bundler won't resolve it on its own. Add a matching "compilerOptions.paths" entry plus a Vite alias (or install vite-tsconfig-paths) before installing, or the written imports won't resolve.`
+    );
+  }
+  if (options.dryRun) {
+    done("Dry run: no files will be written, no packages will be installed.");
+  }
+  console.log();
+
+  return registryUrl;
+}
+
+/**
  * Returns whether the command succeeded. "No components selected" and
  * "installation cancelled" are graceful no-ops (exit 0); a resolution
  * failure (unknown component, unknown registry, network error) is a
@@ -417,30 +514,18 @@ export async function add(
   options: AddOptions
 ): Promise<boolean> {
   const cwd = options.cwd ?? process.cwd();
+  if (!guardProject(cwd, componentNames)) {
+    return false;
+  }
   const config = detectConfig(cwd);
   if (options.path) {
     config.componentPath = options.path;
   }
 
-  let registryUrl: string;
-  try {
-    registryUrl = resolveRegistryUrl(options.registry);
-  } catch (err) {
-    error(sanitize((err as Error).message));
+  const registryUrl = announceSetup(config, options);
+  if (!registryUrl) {
     return false;
   }
-
-  done(`Detected: ${config.componentPath}/ (${config.packageManager})`);
-  done(`Registry: ${registryUrl}`);
-  if (!config.tsconfigPathsConfigured && isAstroProject(cwd)) {
-    warn(
-      `No "${config.aliases.components.split("/")[0]}/*" path alias found in tsconfig.json/jsconfig.json — Astro's Vite bundler won't resolve it on its own. Add a matching "compilerOptions.paths" entry plus a Vite alias (or install vite-tsconfig-paths) before installing, or the written imports won't resolve.`
-    );
-  }
-  if (options.dryRun) {
-    done("Dry run: no files will be written, no packages will be installed.");
-  }
-  console.log();
 
   let selectedComponents = componentNames;
   if (selectedComponents.length === 0) {

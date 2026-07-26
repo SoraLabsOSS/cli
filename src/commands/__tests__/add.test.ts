@@ -8,7 +8,14 @@ import {
   test,
 } from "bun:test";
 import { EventEmitter } from "node:events";
-import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -70,6 +77,10 @@ let errorSpy: ReturnType<typeof spyOn>;
 
 beforeEach(() => {
   tempDir = mkdtempSync(join(tmpdir(), "sora-add-cmd-"));
+  // `add` now requires a package.json at cwd (mirrors shadcn's "empty
+  // project" preflight check) — most tests aren't exercising that guard,
+  // so give them a real project to install into by default.
+  writeFileSync(join(tempDir, "package.json"), "{}");
   delete process.env.SORA_REGISTRY_URL;
   logSpy = spyOn(console, "log").mockImplementation(() => undefined);
   errorSpy = spyOn(console, "error").mockImplementation(() => undefined);
@@ -179,7 +190,6 @@ describe("add", () => {
 
   test("does not reinstall dependencies already present in package.json", async () => {
     restoreFetch = mockFetch(() => jsonResponse(CARD_COMPONENT));
-    const { writeFileSync } = await import("node:fs");
     writeFileSync(
       join(tempDir, "package.json"),
       JSON.stringify({
@@ -206,7 +216,6 @@ describe("add", () => {
 
   test("skips (does not hang on) a file conflict when there's no TTY and --force wasn't passed", async () => {
     restoreFetch = mockFetch(() => jsonResponse(CARD_COMPONENT));
-    const { mkdirSync, writeFileSync } = await import("node:fs");
     mkdirSync(join(tempDir, "components/sora-ui"), { recursive: true });
     const target = join(tempDir, "components/sora-ui/card.tsx");
     writeFileSync(target, "// pre-existing local content, differs\n", "utf8");
@@ -238,5 +247,68 @@ describe("add", () => {
 
     expect(ok).toBe(true);
     expect(existsSync(join(tempDir, "custom/components/card.tsx"))).toBe(true);
+  });
+
+  test("refuses to install at a pnpm workspace root", async () => {
+    writeFileSync(
+      join(tempDir, "pnpm-workspace.yaml"),
+      "packages:\n  - apps/*\n"
+    );
+    mkdirSync(join(tempDir, "apps/web"), { recursive: true });
+    writeFileSync(join(tempDir, "apps/web/package.json"), "{}");
+    const { add } = await import("@/commands/add.js");
+
+    const ok = await add(["card"], { cwd: tempDir, yes: true });
+
+    expect(ok).toBe(false);
+    const errOutput = errorSpy.mock.calls
+      .map((call: unknown[]) => call.map(String).join(" "))
+      .join("\n");
+    expect(errOutput).toContain("monorepo root");
+    const warnOutput = errorSpy.mock.calls
+      .concat(logSpy.mock.calls)
+      .map((call: unknown[]) => call.map(String).join(" "))
+      .join("\n");
+    expect(warnOutput).toContain("--cwd apps/web");
+  });
+
+  test("refuses to install at an npm/yarn workspace root", async () => {
+    writeFileSync(
+      join(tempDir, "package.json"),
+      JSON.stringify({ workspaces: ["packages/*"] })
+    );
+    const { add } = await import("@/commands/add.js");
+
+    const ok = await add(["card"], { cwd: tempDir, yes: true });
+
+    expect(ok).toBe(false);
+  });
+
+  test("allows install at a monorepo root when components.json is present", async () => {
+    restoreFetch = mockFetch(() => jsonResponse(CARD_COMPONENT));
+    mockSpawn(0);
+    writeFileSync(
+      join(tempDir, "package.json"),
+      JSON.stringify({ workspaces: ["packages/*"] })
+    );
+    writeFileSync(join(tempDir, "components.json"), "{}");
+    const { add } = await import("@/commands/add.js");
+
+    const ok = await add(["card"], { cwd: tempDir, force: true, yes: true });
+
+    expect(ok).toBe(true);
+  });
+
+  test("refuses to install into a directory with no package.json", async () => {
+    rmSync(join(tempDir, "package.json"));
+    const { add } = await import("@/commands/add.js");
+
+    const ok = await add(["card"], { cwd: tempDir, yes: true });
+
+    expect(ok).toBe(false);
+    const errOutput = errorSpy.mock.calls
+      .map((call: unknown[]) => call.map(String).join(" "))
+      .join("\n");
+    expect(errOutput).toContain('No "package.json" found');
   });
 });
