@@ -34,6 +34,14 @@ function jsonResponse(data: unknown, status = 200): Response {
   });
 }
 
+function isNpmRegistryUrl(url: string): boolean {
+  try {
+    return new URL(url).hostname === "registry.npmjs.org";
+  } catch {
+    return false;
+  }
+}
+
 /**
  * doctor() fires both the registry reachability check and the npm
  * update check in parallel — route by host so each can be controlled
@@ -46,7 +54,7 @@ function mockFetch(options: {
   const original = globalThis.fetch;
   globalThis.fetch = ((input: Parameters<typeof fetch>[0]) => {
     const url = String(input);
-    if (url.includes("registry.npmjs.org")) {
+    if (isNpmRegistryUrl(url)) {
       return Promise.resolve(
         jsonResponse({ version: options.npmVersion ?? "0.0.1" })
       );
@@ -500,7 +508,7 @@ describe("doctor", () => {
     const original = globalThis.fetch;
     globalThis.fetch = ((input: Parameters<typeof fetch>[0]) => {
       const url = String(input);
-      if (url.includes("registry.npmjs.org")) {
+      if (isNpmRegistryUrl(url)) {
         return Promise.reject(new TypeError("fetch failed"));
       }
       return Promise.resolve(jsonResponse(REGISTRY_JSON));
@@ -539,7 +547,7 @@ describe("doctor", () => {
     const original = globalThis.fetch;
     globalThis.fetch = ((input: Parameters<typeof fetch>[0]) => {
       const url = String(input);
-      if (url.includes("registry.npmjs.org")) {
+      if (isNpmRegistryUrl(url)) {
         return Promise.resolve(jsonResponse({ version: "0.0.1" }));
       }
       requestedUrl = url;
