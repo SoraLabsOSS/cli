@@ -62,6 +62,12 @@ export interface ProjectConfig {
    */
   cwd: string;
   packageManager: PackageManager;
+  /**
+   * The shadcn style from `components.json` ("new-york-v4" when absent) —
+   * shadcn's base registry serves per-style variants of its components, so
+   * the shadcn-fallback fetch must use the same style the shadcn CLI would.
+   */
+  shadcnStyle?: string;
   srcDir: string;
   /**
    * True only when the alias came from a tsconfig/jsconfig `paths` entry.

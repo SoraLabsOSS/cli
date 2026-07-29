@@ -1,6 +1,18 @@
-import { DEFAULT_REGISTRY, REGISTRIES } from "@/constants.js";
+import {
+  DEFAULT_REGISTRY,
+  DEFAULT_SHADCN_STYLE,
+  REGISTRIES,
+  SHADCN_REGISTRY_URL_TEMPLATE,
+} from "@/constants.js";
 import type { Registry, RegistryItem } from "@/types.js";
 import { sanitize } from "@/utils/colors.js";
+
+/**
+ * Distinguishes "this component doesn't exist on that registry" (a 404)
+ * from network/shape/server failures — tree resolution falls back to the
+ * shadcn base registry only for the former, and must not mask the latter.
+ */
+export class ComponentNotFoundError extends Error {}
 
 const HTTP_URL = /^https?:\/\//;
 const TRAILING_SLASH = /\/$/;
@@ -89,7 +101,7 @@ async function tryExtractErrorDetail(
  */
 async function fetchJson<T>(
   url: string,
-  notFoundMessage: string,
+  notFound: () => Error,
   validate: (data: unknown) => asserts data is T
 ): Promise<T> {
   let response: Response;
@@ -116,7 +128,7 @@ async function fetchJson<T>(
 
   if (!response.ok) {
     if (response.status === 404) {
-      throw new Error(notFoundMessage);
+      throw notFound();
     }
     const detail = await tryExtractErrorDetail(response);
     throw new Error(
@@ -169,7 +181,10 @@ export async function fetchRegistry(registry?: string): Promise<Registry> {
   const baseUrl = resolveRegistryUrl(registry);
   return await fetchJson(
     `${baseUrl}/r/registry.json`,
-    `Registry not found at ${baseUrl}. Check the registry URL is correct.`,
+    () =>
+      new Error(
+        `Registry not found at ${baseUrl}. Check the registry URL is correct.`
+      ),
     assertRegistry
   );
 }
@@ -181,9 +196,82 @@ export async function fetchComponent(
   const baseUrl = resolveRegistryUrl(registry);
   return await fetchJson(
     `${baseUrl}/r/${name}.json`,
-    `Component "${name}" not found. Run "sora list" to see available components.`,
+    () =>
+      new ComponentNotFoundError(
+        `Component "${name}" not found. Run "sora list" to see available components.`
+      ),
     assertRegistryItem
   );
+}
+
+/**
+ * shadcn base registry items (button, dialog, ...) ship files with no
+ * `target` — the shadcn CLI derives their destination from its own style
+ * config. Synthesize the conventional "components/ui/<file>" target here so
+ * install path resolution puts them exactly where product components'
+ * "@/components/ui/..." imports expect them.
+ */
+function withShadcnTargets(item: RegistryItem): RegistryItem {
+  return {
+    ...item,
+    files: item.files.map((file) =>
+      file.target
+        ? file
+        : {
+            ...file,
+            target: `components/ui/${file.path.slice(file.path.lastIndexOf("/") + 1)}`,
+          }
+    ),
+  };
+}
+
+function fetchShadcnStyleItem(
+  name: string,
+  style: string
+): Promise<RegistryItem> {
+  // Both segments end up in a URL: `name` comes from remote registry data
+  // and `style` from the user's components.json — encode so neither can
+  // smuggle path segments or query strings into the request.
+  const url = SHADCN_REGISTRY_URL_TEMPLATE.replace(
+    "{style}",
+    encodeURIComponent(style)
+  ).replace("{name}", encodeURIComponent(name));
+  return fetchJson(
+    url,
+    () =>
+      new ComponentNotFoundError(
+        `Component "${name}" not found in the shadcn/ui base registry.`
+      ),
+    assertRegistryItem
+  );
+}
+
+/**
+ * Fetches a component from shadcn's own base registry. Bare (non-namespaced)
+ * registryDependencies like "button" refer to shadcn/ui base components by
+ * convention — when the product registry doesn't serve them itself, they're
+ * resolved from here, mirroring how the shadcn CLI handles them. The
+ * project's components.json style is honored so the fetched variant matches
+ * what the shadcn CLI itself would install; an unknown style falls back to
+ * the default rather than failing the whole install.
+ */
+export async function fetchShadcnComponent(
+  name: string,
+  style: string = DEFAULT_SHADCN_STYLE
+): Promise<RegistryItem> {
+  try {
+    return withShadcnTargets(await fetchShadcnStyleItem(name, style));
+  } catch (err) {
+    if (
+      err instanceof ComponentNotFoundError &&
+      style !== DEFAULT_SHADCN_STYLE
+    ) {
+      return withShadcnTargets(
+        await fetchShadcnStyleItem(name, DEFAULT_SHADCN_STYLE)
+      );
+    }
+    throw err;
+  }
 }
 
 export async function getAvailableComponents(

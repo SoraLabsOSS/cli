@@ -1,6 +1,10 @@
 import type { RegistryItem } from "@/types.js";
 import { bar, dim, highlight, sanitize } from "@/utils/colors.js";
-import { fetchComponent } from "@/utils/registry.js";
+import {
+  ComponentNotFoundError,
+  fetchComponent,
+  fetchShadcnComponent,
+} from "@/utils/registry.js";
 
 export interface ResolvedNode {
   children: ResolvedNode[];
@@ -25,13 +29,60 @@ function stripNamespace(name: string): string {
   return name.includes("/") ? name.slice(name.lastIndexOf("/") + 1) : name;
 }
 
+/**
+ * Fetches a tree node's item, falling back to shadcn's base registry for
+ * bare (non-namespaced) refs the product registry doesn't serve — shadcn
+ * convention says a bare registryDependency like "button" is a shadcn/ui
+ * base component, and product items legitimately depend on those. Only a
+ * 404 triggers the fallback; network/server errors surface as-is. If shadcn
+ * doesn't have it either, the original product-registry error is thrown
+ * since its "sora list" hint is the more useful one.
+ */
+async function fetchTreeItem(
+  rawName: string,
+  bareName: string,
+  registry: string | undefined,
+  shadcnStyle: string | undefined,
+  fromShadcn: boolean
+): Promise<{ item: RegistryItem; shadcn: boolean }> {
+  if (fromShadcn) {
+    return {
+      item: await fetchShadcnComponent(bareName, shadcnStyle),
+      shadcn: true,
+    };
+  }
+  try {
+    return { item: await fetchComponent(bareName, registry), shadcn: false };
+  } catch (err) {
+    if (!(err instanceof ComponentNotFoundError) || rawName.includes("/")) {
+      throw err;
+    }
+    try {
+      return {
+        item: await fetchShadcnComponent(bareName, shadcnStyle),
+        shadcn: true,
+      };
+    } catch (shadcnErr) {
+      throw shadcnErr instanceof ComponentNotFoundError ? err : shadcnErr;
+    }
+  }
+}
+
 export async function resolveTree(
   name: string,
   registry?: string,
-  seen: Set<string> = new Set()
+  seen: Set<string> = new Set(),
+  shadcnStyle?: string,
+  fromShadcn = false
 ): Promise<ResolvedNode> {
   const bareName = stripNamespace(name);
-  const item = await fetchComponent(bareName, registry);
+  const { item, shadcn } = await fetchTreeItem(
+    name,
+    bareName,
+    registry,
+    shadcnStyle,
+    fromShadcn
+  );
   seen.add(bareName);
 
   const children: ResolvedNode[] = [];
@@ -42,8 +93,18 @@ export async function resolveTree(
     if (seen.has(dep) || BASE_DEPENDENCIES.has(dep)) {
       continue;
     }
+    // A shadcn item's own dependencies are shadcn items too — resolve
+    // them from the shadcn registry directly instead of 404-probing the
+    // product registry first.
     // biome-ignore lint/performance/noAwaitInLoops: must stay sequential, see comment above
-    children.push(await resolveTree(dep, registry, seen));
+    const child = await resolveTree(
+      rawDep,
+      registry,
+      seen,
+      shadcnStyle,
+      shadcn
+    );
+    children.push(child);
   }
 
   return { children, item };

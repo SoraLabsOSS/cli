@@ -82,6 +82,28 @@ describe("rewriteAliases", () => {
     expect(result).not.toContain("~/lib//utils");
   });
 
+  test("collapses shadcn @/registry/<style>/lib/utils imports", () => {
+    const input = 'import { cn } from "@/registry/radix-nova/lib/utils"';
+    expect(rewriteAliases(input, ALIASES)).toBe(
+      'import { cn } from "~/lib/utils"'
+    );
+  });
+
+  test("rewrites shadcn @/registry/<style>/ui/ imports to components/ui", () => {
+    const input = 'import { Button } from "@/registry/new-york-v4/ui/button"';
+    expect(rewriteAliases(input, ALIASES)).toBe(
+      'import { Button } from "~/components/ui/button"'
+    );
+  });
+
+  test("collapses shadcn @/registry/<style>/hooks imports", () => {
+    const input =
+      "import { useIsMobile } from '@/registry/radix-nova/hooks/use-mobile'";
+    expect(rewriteAliases(input, ALIASES)).toBe(
+      "import { useIsMobile } from '~/hooks/use-mobile'"
+    );
+  });
+
   test("rewrites all occurrences of the same pattern", () => {
     const input = [
       'import { cn } from "@/lib/utils";',
@@ -292,6 +314,29 @@ describe("resolveTarget", () => {
     };
     expect(resolveTarget(file, makeItem("deep"), config)).toBe(
       "src/components/sora-ui/a/b/c/deep.tsx"
+    );
+  });
+
+  test("keeps shadcn components/ui/ targets out of componentPath", () => {
+    const file = {
+      path: "registry/new-york-v4/ui/button.tsx",
+      target: "components/ui/button.tsx",
+      type: "registry:ui",
+    };
+    expect(resolveTarget(file, makeItem("button"), config)).toBe(
+      "src/components/ui/button.tsx"
+    );
+  });
+
+  test("keeps components/ui/ target as-is when no srcDir configured", () => {
+    const noSrcConfig = { ...config, srcDir: "" };
+    const file = {
+      path: "registry/new-york-v4/ui/button.tsx",
+      target: "components/ui/button.tsx",
+      type: "registry:ui",
+    };
+    expect(resolveTarget(file, makeItem("button"), noSrcConfig)).toBe(
+      "components/ui/button.tsx"
     );
   });
 });

@@ -1,7 +1,9 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import {
+  ComponentNotFoundError,
   fetchComponent,
   fetchRegistry,
+  fetchShadcnComponent,
   getAvailableComponents,
 } from "@/utils/registry.js";
 
@@ -13,6 +15,7 @@ const INVALID_JSON = /invalid JSON/;
 const MALFORMED_REGISTRY = /Malformed registry/;
 const COMPONENT_NOT_FOUND = /Component "nonexistent" not found/;
 const MALFORMED_COMPONENT = /Malformed component/;
+const SHADCN_NOT_FOUND = /not found in the shadcn\/ui base registry/;
 
 const MOCK_REGISTRY = {
   homepage: "https://ui.soralabs.io.vn",
@@ -141,9 +144,91 @@ describe("fetchComponent", () => {
     );
   });
 
+  test("throws ComponentNotFoundError specifically on 404", async () => {
+    restore = mockFetch(() => new Response("Not Found", { status: 404 }));
+    await expect(fetchComponent("nonexistent")).rejects.toBeInstanceOf(
+      ComponentNotFoundError
+    );
+  });
+
   test("throws on malformed component shape", async () => {
     restore = mockFetch(() => jsonResponse({ name: "x" }));
     await expect(fetchComponent("x")).rejects.toThrow(MALFORMED_COMPONENT);
+  });
+});
+
+describe("fetchShadcnComponent", () => {
+  const SHADCN_BUTTON = {
+    dependencies: ["radix-ui"],
+    files: [
+      {
+        content: "export const Button = () => <button />;",
+        path: "registry/new-york-v4/ui/button.tsx",
+        type: "registry:ui",
+      },
+    ],
+    name: "button",
+    type: "registry:ui",
+  };
+
+  test("fetches from the shadcn base registry and synthesizes targets", async () => {
+    restore = mockFetch((url) => {
+      expect(url).toBe(
+        "https://ui.shadcn.com/r/styles/new-york-v4/button.json"
+      );
+      return jsonResponse(SHADCN_BUTTON);
+    });
+    const result = await fetchShadcnComponent("button");
+    expect(result.files[0]?.target).toBe("components/ui/button.tsx");
+  });
+
+  test("keeps an existing target untouched", async () => {
+    restore = mockFetch(() =>
+      jsonResponse({
+        ...SHADCN_BUTTON,
+        files: [{ ...SHADCN_BUTTON.files[0], target: "custom/place.tsx" }],
+      })
+    );
+    const result = await fetchShadcnComponent("button");
+    expect(result.files[0]?.target).toBe("custom/place.tsx");
+  });
+
+  test("uses the project's shadcn style when provided", async () => {
+    restore = mockFetch((url) => {
+      expect(url).toBe("https://ui.shadcn.com/r/styles/radix-nova/button.json");
+      return jsonResponse(SHADCN_BUTTON);
+    });
+    const result = await fetchShadcnComponent("button", "radix-nova");
+    expect(result.name).toBe("button");
+  });
+
+  test("falls back to the default style when the styled variant is missing", async () => {
+    const urls: string[] = [];
+    restore = mockFetch((url) => {
+      urls.push(url);
+      if (url.includes("/custom-style/")) {
+        return new Response("Not Found", { status: 404 });
+      }
+      return jsonResponse(SHADCN_BUTTON);
+    });
+    const result = await fetchShadcnComponent("button", "custom-style");
+    expect(result.name).toBe("button");
+    expect(urls).toEqual([
+      "https://ui.shadcn.com/r/styles/custom-style/button.json",
+      "https://ui.shadcn.com/r/styles/new-york-v4/button.json",
+    ]);
+  });
+
+  test("throws ComponentNotFoundError on 404", async () => {
+    restore = mockFetch(() => new Response("Not Found", { status: 404 }));
+    await expect(fetchShadcnComponent("ghost")).rejects.toBeInstanceOf(
+      ComponentNotFoundError
+    );
+    restore();
+    restore = mockFetch(() => new Response("Not Found", { status: 404 }));
+    await expect(fetchShadcnComponent("ghost")).rejects.toThrow(
+      SHADCN_NOT_FOUND
+    );
   });
 });
 

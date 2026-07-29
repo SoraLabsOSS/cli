@@ -13,3 +13,15 @@ export const REGISTRIES: Record<string, string> = {
 export const DEFAULT_REGISTRY = "ui";
 
 export const DEFAULT_COMPONENT_PATH = "components/sora-ui";
+
+/**
+ * shadcn's own base registry, per style. Bare (non-namespaced)
+ * registryDependencies like "button" refer to shadcn/ui base components by
+ * convention — when a product registry doesn't serve them itself, they're
+ * fetched from here, mirroring how the shadcn CLI resolves them. The style
+ * segment comes from the project's components.json when present.
+ */
+export const SHADCN_REGISTRY_URL_TEMPLATE =
+  "https://ui.shadcn.com/r/styles/{style}/{name}.json";
+
+export const DEFAULT_SHADCN_STYLE = "new-york-v4";

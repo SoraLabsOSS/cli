@@ -92,7 +92,8 @@ async function pickComponents(registry?: string): Promise<string[] | null> {
 async function resolveComponents(
   names: string[],
   registry: string | undefined,
-  silent: boolean
+  silent: boolean,
+  shadcnStyle: string | undefined
 ): Promise<RegistryItem[] | null> {
   const loadingSpinner = spinner();
   loadingSpinner.start("Resolving dependencies...");
@@ -115,7 +116,7 @@ async function resolveComponents(
     try {
       loadingSpinner.message(`Resolving ${name}...`);
       // biome-ignore lint/performance/noAwaitInLoops: sequential — fetchSeen must update between fetches
-      const tree = await resolveTree(name, registry, fetchSeen);
+      const tree = await resolveTree(name, registry, fetchSeen, shadcnStyle);
       const flat = flattenTree(tree);
 
       for (const item of flat) {
@@ -545,7 +546,8 @@ export async function add(
   const allComponents = await resolveComponents(
     selectedComponents,
     options.registry,
-    options.silent ?? false
+    options.silent ?? false,
+    config.shadcnStyle
   );
   if (!allComponents) {
     return false;

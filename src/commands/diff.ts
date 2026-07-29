@@ -14,7 +14,8 @@ interface DiffOptions {
 
 async function resolveComponentsForDiff(
   names: string[],
-  registry: string | undefined
+  registry: string | undefined,
+  shadcnStyle: string | undefined
 ): Promise<RegistryItem[] | null> {
   const loadingSpinner = spinner();
   loadingSpinner.start("Resolving dependencies...");
@@ -31,7 +32,7 @@ async function resolveComponentsForDiff(
     try {
       loadingSpinner.message(`Resolving ${name}...`);
       // biome-ignore lint/performance/noAwaitInLoops: sequential — fetchSeen must update between fetches
-      const tree = await resolveTree(name, registry, fetchSeen);
+      const tree = await resolveTree(name, registry, fetchSeen, shadcnStyle);
       for (const item of flattenTree(tree)) {
         if (!collected.has(item.name)) {
           collected.add(item.name);
@@ -73,7 +74,8 @@ export async function diff(
 
   const allComponents = await resolveComponentsForDiff(
     componentNames,
-    options.registry
+    options.registry,
+    config.shadcnStyle
   );
   if (!allComponents) {
     return false;

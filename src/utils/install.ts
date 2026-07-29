@@ -62,10 +62,25 @@ interface WriteResult {
  */
 const COMPONENT_PATH_PATTERN = /^components\/[^/]+\//;
 
+/**
+ * Exemption from the remap above: "components/ui/" is where shadcn base
+ * components (fetched via the shadcn-registry fallback) must land, because
+ * product components import them as "@/components/ui/<name>" — remapping
+ * them under componentPath would break those imports.
+ */
+const SHADCN_UI_PREFIX = "components/ui/";
+
 const UTILS_IMPORT = /(["'])@\/lib\/utils(["'])/g;
 const HOOKS_IMPORT = /(["'])@\/hooks\//g;
 const COMPONENTS_IMPORT = /(["'])@\/components\//g;
 const LIB_IMPORT = /(["'])@\/lib\//g;
+/**
+ * shadcn base registry content is authored against its own repo layout
+ * ("@/registry/<style>/lib/utils", "@/registry/<style>/ui/..."). The shadcn
+ * CLI collapses that prefix on install — do the same before the per-category
+ * rewrites below so those regexes see the plain "@/" convention.
+ */
+const SHADCN_REGISTRY_IMPORT = /(["'])@\/registry\/[^/]+\/(ui\/)?/g;
 
 /**
  * Registry content is authored against the "@/" import convention
@@ -82,6 +97,9 @@ export function rewriteAliases(
   aliases: ComponentAliases
 ): string {
   return content
+    .replace(SHADCN_REGISTRY_IMPORT, (_match, quote: string, ui?: string) =>
+      ui ? `${quote}@/components/ui/` : `${quote}@/`
+    )
     .replace(UTILS_IMPORT, `$1${aliases.utils}$2`)
     .replace(HOOKS_IMPORT, `$1${aliases.hooks}/`)
     .replace(COMPONENTS_IMPORT, `$1${aliases.components}/`)
@@ -127,7 +145,7 @@ export function resolveTarget(
     return `${config.componentPath}/${item.name}.tsx`;
   }
   const match = file.target.match(COMPONENT_PATH_PATTERN);
-  if (match) {
+  if (match && !file.target.startsWith(SHADCN_UI_PREFIX)) {
     return `${config.componentPath}/${file.target.slice(match[0].length)}`;
   }
   if (config.srcDir) {

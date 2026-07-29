@@ -150,18 +150,18 @@ export function isAstroProject(cwd: string): boolean {
  * where it's present, since a project can point "hooks" and "lib" at
  * different roots than "components".
  */
-function readComponentsJsonAliases(
+function readComponentsJson(
   cwd: string
-): Partial<ComponentAliases> | null {
+): { aliases?: Partial<ComponentAliases>; style?: string } | null {
   const path = join(cwd, "components.json");
   if (!existsSync(path)) {
     return null;
   }
   try {
-    const parsed = JSON.parse(readFileSync(path, "utf8")) as {
+    return JSON.parse(readFileSync(path, "utf8")) as {
       aliases?: Partial<ComponentAliases>;
+      style?: string;
     };
-    return parsed.aliases ?? null;
   } catch {
     return null;
   }
@@ -194,7 +194,8 @@ export function getInstalledDependencyNames(cwd: string): Set<string> {
 
 export function detectConfig(cwd: string): ProjectConfig {
   const { alias, configured, srcDir } = detectAlias(cwd);
-  const fromComponentsJson = readComponentsJsonAliases(cwd);
+  const componentsJson = readComponentsJson(cwd);
+  const fromComponentsJson = componentsJson?.aliases ?? null;
 
   const aliases: ComponentAliases = {
     components: fromComponentsJson?.components ?? `${alias}/components`,
@@ -211,6 +212,7 @@ export function detectConfig(cwd: string): ProjectConfig {
       : DEFAULT_COMPONENT_PATH,
     cwd,
     packageManager: detectPackageManager(cwd),
+    shadcnStyle: componentsJson?.style,
     srcDir,
     tsconfigPathsConfigured: configured,
   };
