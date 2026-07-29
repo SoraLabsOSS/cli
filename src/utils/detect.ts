@@ -192,6 +192,57 @@ export function getInstalledDependencyNames(cwd: string): Set<string> {
   }
 }
 
+interface PackageJsonDeps {
+  dependencies?: Record<string, string>;
+  devDependencies?: Record<string, string>;
+  peerDependencies?: Record<string, string>;
+}
+
+function readDependencyVersion(dir: string, name: string): string | null {
+  const path = join(dir, "package.json");
+  if (!existsSync(path)) {
+    return null;
+  }
+  try {
+    const pkg = JSON.parse(readFileSync(path, "utf8")) as PackageJsonDeps;
+    return (
+      pkg.dependencies?.[name] ??
+      pkg.devDependencies?.[name] ??
+      pkg.peerDependencies?.[name] ??
+      null
+    );
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Walks up from cwd looking for `name` in a package.json's dependencies —
+ * mirrors detectPackageManager's ancestor walk, since a workspace package
+ * (e.g. `packages/ui` in a Turborepo/Bun/pnpm monorepo) commonly relies on
+ * a shared devDependency like tailwindcss or react declared once at the
+ * monorepo root rather than duplicated in every package.json. Returns the
+ * directory it was found in so related file checks (e.g. tailwind.config)
+ * can search the same span instead of just cwd.
+ */
+export function findAncestorDependency(
+  cwd: string,
+  name: string
+): { dir: string; version: string } | null {
+  let dir = cwd;
+  for (;;) {
+    const version = readDependencyVersion(dir, name);
+    if (version) {
+      return { dir, version };
+    }
+    const parent = dirname(dir);
+    if (parent === dir) {
+      return null;
+    }
+    dir = parent;
+  }
+}
+
 export function detectConfig(cwd: string): ProjectConfig {
   const { alias, configured, srcDir } = detectAlias(cwd);
   const componentsJson = readComponentsJson(cwd);

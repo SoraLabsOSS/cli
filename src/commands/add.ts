@@ -43,6 +43,12 @@ import {
   printTree,
   resolveTree,
 } from "@/utils/tree.js";
+import {
+  collectCssPayload,
+  hasCssPayload,
+  shouldOverwriteCssVars,
+  updateGlobalCss,
+} from "@/utils/update-css.js";
 
 interface AddOptions {
   cwd?: string;
@@ -370,6 +376,54 @@ async function installNpmDependencies(
   );
 }
 
+/**
+ * Applies the merged css/cssVars payload from every resolved item to the
+ * project's global CSS file — runs last (after files and npm deps, like
+ * shadcn's own updater order) so a dev server's file watcher rebuilds once
+ * everything is in place. A missing global CSS file downgrades to a warning
+ * rather than failing the install: the components themselves are already
+ * written and usable, only their theme variables need manual wiring.
+ */
+async function applyCssUpdates(
+  allComponents: RegistryItem[],
+  config: ProjectConfig,
+  dryRun: boolean,
+  silent: boolean
+): Promise<void> {
+  const payload = collectCssPayload(allComponents);
+  if (!hasCssPayload(payload)) {
+    return;
+  }
+
+  try {
+    const outcome = await updateGlobalCss(payload, config.cwd, {
+      dryRun,
+      overwriteCssVars: shouldOverwriteCssVars(allComponents),
+    });
+
+    if (outcome.status === "no-css-file") {
+      warn(
+        "Some components define CSS variables/styles, but no global CSS file with a Tailwind import was found — add them manually."
+      );
+      return;
+    }
+    if (silent) {
+      return;
+    }
+    if (outcome.status === "unchanged") {
+      bar(`Unchanged: ${sanitize(outcome.path)}`);
+    } else {
+      const label =
+        outcome.status === "would-update" ? "Would update" : "Updated";
+      done(`${label}: ${sanitize(outcome.path)}`);
+    }
+  } catch (err) {
+    warn(
+      `Failed to update global CSS: ${sanitize((err as Error).message)} — add the component's css/cssVars manually.`
+    );
+  }
+}
+
 async function performInstall(
   allComponents: RegistryItem[],
   config: ProjectConfig,
@@ -402,6 +456,7 @@ async function performInstall(
     dryRun,
     config.cwd
   );
+  await applyCssUpdates(allComponents, config, dryRun, silent);
 
   const totalComponents = allComponents.length;
   const verb = dryRun ? "Would install" : "Done! Installed";

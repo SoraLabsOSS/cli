@@ -4,6 +4,7 @@ import type { ProjectConfig } from "@/types.js";
 import { active, bar, done, error, sanitize, warn } from "@/utils/colors.js";
 import {
   detectConfig,
+  findAncestorDependency,
   findPackageManagerEvidence,
   isAstroProject,
   LOCKFILES,
@@ -38,63 +39,6 @@ const TAILWIND_CONFIG_FILES = [
   "tailwind.config.cjs",
   "tailwind.config.mjs",
 ];
-
-interface PackageJsonShape {
-  dependencies?: Record<string, string>;
-  devDependencies?: Record<string, string>;
-  peerDependencies?: Record<string, string>;
-}
-
-function readPackageJson(cwd: string): PackageJsonShape | null {
-  const path = join(cwd, "package.json");
-  if (!existsSync(path)) {
-    return null;
-  }
-  try {
-    return JSON.parse(readFileSync(path, "utf8")) as PackageJsonShape;
-  } catch {
-    return null;
-  }
-}
-
-function getDepVersion(
-  pkg: PackageJsonShape | null,
-  name: string
-): string | null {
-  return (
-    pkg?.dependencies?.[name] ??
-    pkg?.devDependencies?.[name] ??
-    pkg?.peerDependencies?.[name] ??
-    null
-  );
-}
-
-/**
- * Walks up from cwd looking for `name` in a package.json's dependencies —
- * mirrors detectPackageManager's ancestor walk, since a workspace package
- * (e.g. `packages/ui` in a Turborepo/Bun/pnpm monorepo) commonly relies on
- * a shared devDependency like tailwindcss or react declared once at the
- * monorepo root rather than duplicated in every package.json. Returns the
- * directory it was found in so related file checks (e.g. tailwind.config)
- * can search the same span instead of just cwd.
- */
-function findAncestorDependency(
-  cwd: string,
-  name: string
-): { dir: string; version: string } | null {
-  let dir = cwd;
-  for (;;) {
-    const version = getDepVersion(readPackageJson(dir), name);
-    if (version) {
-      return { dir, version };
-    }
-    const parent = dirname(dir);
-    if (parent === dir) {
-      return null;
-    }
-    dir = parent;
-  }
-}
 
 function checkNodeVersion(): CheckResult {
   const major = Number.parseInt(

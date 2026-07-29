@@ -3,7 +3,9 @@
     "@bomb.sh/args": "^0.3.1",
     "@clack/prompts": "^1.7.0",
     "diff": "^9.0.0",
-    "picocolors": "^1.1.1"
+    "picocolors": "^1.1.1",
+    "postcss": "^8.5.25",
+    "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.3",

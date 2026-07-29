@@ -5,8 +5,24 @@ export interface RegistryFile {
   type: string;
 }
 
+/**
+ * shadcn registry-item `css` field: selectors/at-rules mapped to either a
+ * raw declaration string or a nested block. An empty object means a body-
+ * less at-rule (e.g. `"@apply underline": {}`).
+ */
+export type CssDefinition = string | { [key: string]: CssDefinition };
+
+/**
+ * shadcn registry-item `cssVars` field: variables grouped by scope —
+ * "theme" lands in `@theme inline` (Tailwind v4), "light" in `:root`,
+ * any other key (usually "dark") in `.<key>`.
+ */
+export type RegistryItemCssVars = Record<string, Record<string, string>>;
+
 export interface RegistryItem {
   $schema?: string;
+  css?: Record<string, CssDefinition>;
+  cssVars?: RegistryItemCssVars;
   dependencies?: string[];
   description?: string;
   devDependencies?: string[];
