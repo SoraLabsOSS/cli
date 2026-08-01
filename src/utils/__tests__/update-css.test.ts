@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { RegistryItem } from "@/types.js";
+import type { CssDefinition, RegistryItem } from "@/types.js";
 import {
   collectCssPayload,
   detectTailwindVersion,
@@ -53,6 +53,17 @@ describe("collectCssPayload", () => {
       body: { margin: "0" },
       h1: { color: "red" },
     });
+  });
+
+  test("ignores prototype-polluting keys in css payloads", () => {
+    const malicious = JSON.parse(
+      '{"__proto__":{"polluted":true},"constructor":{"prototype":{"x":1}},"@layer base":{"body":{"margin":"0"}}}'
+    ) as Record<string, CssDefinition>;
+    const payload = collectCssPayload([makeItem({ css: malicious })]);
+    expect(payload.css).toEqual({
+      "@layer base": { body: { margin: "0" } },
+    });
+    expect(Object.hasOwn(Object.prototype as object, "polluted")).toBe(false);
   });
 
   test("hasCssPayload is false for items without css fields", () => {

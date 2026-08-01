@@ -161,11 +161,20 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+const PROTOTYPE_POLLUTION_KEYS = new Set([
+  "__proto__",
+  "constructor",
+  "prototype",
+]);
+
 function mergeCssDefinitions(
   target: Record<string, CssDefinition>,
   source: Record<string, CssDefinition>
 ): void {
   for (const [key, value] of Object.entries(source)) {
+    if (PROTOTYPE_POLLUTION_KEYS.has(key)) {
+      continue;
+    }
     const existing = target[key];
     if (isPlainObject(existing) && isPlainObject(value)) {
       mergeCssDefinitions(existing, value);
