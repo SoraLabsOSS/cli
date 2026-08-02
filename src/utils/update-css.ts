@@ -161,18 +161,14 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-const PROTOTYPE_POLLUTION_KEYS = new Set([
-  "__proto__",
-  "constructor",
-  "prototype",
-]);
-
 function mergeCssDefinitions(
   target: Record<string, CssDefinition>,
   source: Record<string, CssDefinition>
 ): void {
   for (const [key, value] of Object.entries(source)) {
-    if (PROTOTYPE_POLLUTION_KEYS.has(key)) {
+    // Inline literal checks (not Set.has) — CodeQL's
+    // js/prototype-pollution-utility only recognizes this shape as a sanitizer.
+    if (key === "__proto__" || key === "constructor" || key === "prototype") {
       continue;
     }
     const existing = target[key];
