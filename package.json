@@ -35,7 +35,7 @@
   "homepage": "https://ui.soralabs.studio",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/SoraLabsOSS/sora-cli.git"
+    "url": "git+https://github.com/SoraLabsOSS/cli.git"
   },
   "keywords": [
     "cli",

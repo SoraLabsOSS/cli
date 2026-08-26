@@ -51,8 +51,8 @@ Adding a new Sora Labs product as a source should only require adding an entry t
 1. Fork the repository and clone your fork:
 
    ```bash
-   git clone https://github.com/<YOUR_USERNAME>/sora-cli.git
-   cd sora-cli
+    git clone https://github.com/<YOUR_USERNAME>/cli.git
+    cd cli
    ```
 
 2. Create a branch from the latest default branch:
