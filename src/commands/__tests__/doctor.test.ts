@@ -22,7 +22,7 @@ interface CheckResult {
 const SUMMARY_LINE_PATTERN = /\d+ passed, \d+ warnings?, \d+ failed/;
 
 const REGISTRY_JSON = {
-  homepage: "https://ui.soralabs.io.vn",
+  homepage: "https://ui.soralabs.studio",
   items: [],
   name: "sora-ui",
 };

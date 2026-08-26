@@ -7,7 +7,7 @@
  * the CLI logic itself never needs to change.
  */
 export const REGISTRIES: Record<string, string> = {
-  ui: "https://ui.soralabs.io.vn",
+  ui: "https://ui.soralabs.studio",
 };
 
 export const DEFAULT_REGISTRY = "ui";

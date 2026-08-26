@@ -12,7 +12,7 @@ import { list } from "@/commands/list.js";
 const REGISTRY_NOT_FOUND = /Registry not found/;
 
 const MOCK_REGISTRY = {
-  homepage: "https://ui.soralabs.io.vn",
+  homepage: "https://ui.soralabs.studio",
   items: [
     { description: "A card.", name: "card", type: "registry:ui" },
     { name: "demo-card", type: "registry:ui" },

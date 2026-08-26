@@ -1,6 +1,6 @@
 # Contributing to sora-cli
 
-Thank you for helping improve `@soralabsoss/sora-cli`, the CLI that installs [Sora UI](https://ui.soralabs.io.vn) (and, over time, other Sora Labs product) components into a user's project.
+Thank you for helping improve `@soralabsoss/sora-cli`, the CLI that installs [Sora UI](https://ui.soralabs.studio) (and, over time, other Sora Labs product) components into a user's project.
 
 ## Before you start
 

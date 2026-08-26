@@ -11,7 +11,7 @@ const UNKNOWN_REGISTRY = /Unknown registry "nonexistent"/;
 describe("assertSecureRegistryUrl", () => {
   test("accepts HTTPS URLs", () => {
     expect(() =>
-      assertSecureRegistryUrl("https://ui.soralabs.io.vn")
+      assertSecureRegistryUrl("https://ui.soralabs.studio")
     ).not.toThrow();
   });
 
@@ -66,11 +66,11 @@ describe("resolveRegistryUrl", () => {
   });
 
   test("resolves known registry key", () => {
-    expect(resolveRegistryUrl("ui")).toBe("https://ui.soralabs.io.vn");
+    expect(resolveRegistryUrl("ui")).toBe("https://ui.soralabs.studio");
   });
 
   test("uses default registry when no argument", () => {
-    expect(resolveRegistryUrl()).toBe("https://ui.soralabs.io.vn");
+    expect(resolveRegistryUrl()).toBe("https://ui.soralabs.studio");
   });
 
   test("accepts full HTTPS URL", () => {

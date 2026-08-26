@@ -28,11 +28,11 @@
     "prepare": "lefthook install"
   },
   "type": "module",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "CLI to install components from any shadcn-compatible registry — defaults to Sora UI and other Sora Labs products",
   "license": "MIT",
   "author": "Axyl1410",
-  "homepage": "https://ui.soralabs.io.vn",
+  "homepage": "https://ui.soralabs.studio",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/SoraLabsOSS/sora-cli.git"

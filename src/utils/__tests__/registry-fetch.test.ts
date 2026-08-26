@@ -18,7 +18,7 @@ const MALFORMED_COMPONENT = /Malformed component/;
 const SHADCN_NOT_FOUND = /not found in the shadcn\/ui base registry/;
 
 const MOCK_REGISTRY = {
-  homepage: "https://ui.soralabs.io.vn",
+  homepage: "https://ui.soralabs.studio",
   items: [
     { name: "text-effect", type: "registry:ui" },
     { name: "demo-text-effect", type: "registry:ui" },
