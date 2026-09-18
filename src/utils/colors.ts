@@ -1,5 +1,11 @@
 import pc from "picocolors";
-import { SORA_CLI_BANNER } from "@/ascii-art.js";
+
+const SORA_CLI_BANNER = `███████╗ ██████╗ ██████╗  █████╗      ██████╗██╗     ██╗
+██╔════╝██╔═══██╗██╔══██╗██╔══██╗    ██╔════╝██║     ██║
+███████╗██║   ██║██████╔╝███████║    ██║     ██║     ██║
+╚════██║██║   ██║██╔══██╗██╔══██║    ██║     ██║     ██║
+███████║╚██████╔╝██║  ██║██║  ██║    ╚██████╗███████╗██║
+╚══════╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝     ╚═════╝╚══════╝╚═╝`;
 
 // biome-ignore lint/suspicious/noControlCharactersInRegex: intentionally matching control/escape chars to strip them before printing
 const CONTROL_CHARS = /[\x00-\x08\x0B-\x1F\x7F]/g;

@@ -216,6 +216,21 @@ function readDependencyVersion(dir: string, name: string): string | null {
   }
 }
 
+export function findAncestorFile(cwd: string, fileName: string): string | null {
+  let dir = cwd;
+  for (;;) {
+    const fullPath = join(dir, fileName);
+    if (existsSync(fullPath)) {
+      return fullPath;
+    }
+    const parent = dirname(dir);
+    if (parent === dir) {
+      return null;
+    }
+    dir = parent;
+  }
+}
+
 /**
  * Walks up from cwd looking for `name` in a package.json's dependencies —
  * mirrors detectPackageManager's ancestor walk, since a workspace package

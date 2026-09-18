@@ -1,6 +1,5 @@
 {
   "dependencies": {
-    "@bomb.sh/args": "^0.3.1",
     "@clack/prompts": "^1.7.0",
     "diff": "^9.0.0",
     "picocolors": "^1.1.1",
@@ -28,7 +27,7 @@
     "prepare": "lefthook install"
   },
   "type": "module",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "CLI to install components from any shadcn-compatible registry — defaults to Sora UI and other Sora Labs products",
   "license": "MIT",
   "author": "Axyl1410",

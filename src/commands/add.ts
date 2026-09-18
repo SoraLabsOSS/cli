@@ -3,12 +3,12 @@ import { join } from "node:path";
 import {
   confirm,
   isCancel,
+  multiselect,
   note,
   outro,
   select,
   taskLog,
 } from "@clack/prompts";
-import { searchMultiselect } from "@/prompts/search-multiselect.js";
 import type { PackageManager, ProjectConfig, RegistryItem } from "@/types.js";
 import {
   bar,
@@ -39,9 +39,9 @@ import {
 import { spinner } from "@/utils/spinner.js";
 import {
   collectNpmDeps,
-  flattenTree,
   printTree,
-  resolveTree,
+  type ResolvedNode,
+  resolveComponentList,
 } from "@/utils/tree.js";
 import {
   collectCssPayload,
@@ -73,82 +73,25 @@ async function pickComponents(registry?: string): Promise<string[] | null> {
   }
   loadingSpinner.stop("Fetched available components");
 
-  const items = availableComponents.map((name) => ({
-    category: "Components",
-    label: name,
-    value: name,
-  }));
-
-  const selected = await searchMultiselect({
-    items,
+  const selected = await multiselect({
     message: "Select components to install:",
+    options: availableComponents.map((name) => ({
+      label: name,
+      value: name,
+    })),
+    required: true,
   });
 
-  if (!selected || selected.length === 0) {
+  if (isCancel(selected) || !selected || (selected as string[]).length === 0) {
     console.log();
     done("No components selected.");
     return null;
   }
 
-  done(`Selected: ${selected.map(sanitize).join(", ")}`);
+  const chosen = selected as string[];
+  done(`Selected: ${chosen.map(sanitize).join(", ")}`);
   console.log();
-  return selected;
-}
-
-async function resolveComponents(
-  names: string[],
-  registry: string | undefined,
-  silent: boolean,
-  shadcnStyle: string | undefined
-): Promise<RegistryItem[] | null> {
-  const loadingSpinner = spinner();
-  loadingSpinner.start("Resolving dependencies...");
-
-  const allComponents: RegistryItem[] = [];
-  // Shared across every resolveTree call below, so a dependency already
-  // resolved for an earlier requested component isn't fetched (or printed)
-  // again — separate from `collected`, which tracks what's already in
-  // allComponents, since resolveTree marks an item "seen" the moment it
-  // starts resolving it, before we get a chance to collect it here.
-  const fetchSeen = new Set<string>();
-  const collected = new Set<string>();
-  const trees: Parameters<typeof printTree>[0][] = [];
-
-  for (const name of names) {
-    if (fetchSeen.has(name)) {
-      continue;
-    }
-
-    try {
-      loadingSpinner.message(`Resolving ${name}...`);
-      // biome-ignore lint/performance/noAwaitInLoops: sequential — fetchSeen must update between fetches
-      const tree = await resolveTree(name, registry, fetchSeen, shadcnStyle);
-      const flat = flattenTree(tree);
-
-      for (const item of flat) {
-        if (!collected.has(item.name)) {
-          collected.add(item.name);
-          allComponents.push(item);
-        }
-      }
-
-      trees.push(tree);
-    } catch (err) {
-      loadingSpinner.error(`Failed to resolve ${name}`);
-      error(sanitize((err as Error).message));
-      return null;
-    }
-  }
-
-  loadingSpinner.stop("Resolved dependencies");
-  if (!silent) {
-    bar();
-    for (const tree of trees) {
-      printTree(tree);
-    }
-    bar();
-  }
-  return allComponents;
+  return chosen;
 }
 
 /**
@@ -598,14 +541,23 @@ export async function add(
     selectedComponents = picked;
   }
 
-  const allComponents = await resolveComponents(
+  const trees: ResolvedNode[] = [];
+  const allComponents = await resolveComponentList(
     selectedComponents,
     options.registry,
-    options.silent ?? false,
-    config.shadcnStyle
+    config.shadcnStyle,
+    (tree) => trees.push(tree)
   );
   if (!allComponents) {
     return false;
+  }
+
+  if (!options.silent) {
+    bar();
+    for (const tree of trees) {
+      printTree(tree);
+    }
+    bar();
   }
 
   if (options.view) {

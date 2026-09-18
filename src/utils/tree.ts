@@ -1,10 +1,11 @@
 import type { RegistryItem } from "@/types.js";
-import { bar, dim, highlight, sanitize } from "@/utils/colors.js";
+import { bar, dim, error, highlight, sanitize } from "@/utils/colors.js";
 import {
   ComponentNotFoundError,
   fetchComponent,
   fetchShadcnComponent,
 } from "@/utils/registry.js";
+import { spinner } from "@/utils/spinner.js";
 
 export interface ResolvedNode {
   children: ResolvedNode[];
@@ -154,4 +155,44 @@ export function collectNpmDeps(items: RegistryItem[]): {
     dependencies: [...dependencies],
     devDependencies: [...devDependencies],
   };
+}
+
+export async function resolveComponentList(
+  names: string[],
+  registry?: string,
+  shadcnStyle?: string,
+  onTree?: (tree: ResolvedNode) => void
+): Promise<RegistryItem[] | null> {
+  const loadingSpinner = spinner();
+  loadingSpinner.start("Resolving dependencies...");
+
+  const allComponents: RegistryItem[] = [];
+  const fetchSeen = new Set<string>();
+  const collected = new Set<string>();
+
+  for (const name of names) {
+    if (fetchSeen.has(name)) {
+      continue;
+    }
+
+    try {
+      loadingSpinner.message(`Resolving ${name}...`);
+      // biome-ignore lint/performance/noAwaitInLoops: sequential — fetchSeen must update between fetches
+      const tree = await resolveTree(name, registry, fetchSeen, shadcnStyle);
+      for (const item of flattenTree(tree)) {
+        if (!collected.has(item.name)) {
+          collected.add(item.name);
+          allComponents.push(item);
+        }
+      }
+      onTree?.(tree);
+    } catch (err) {
+      loadingSpinner.error(`Failed to resolve ${name}`);
+      error(sanitize((err as Error).message));
+      return null;
+    }
+  }
+
+  loadingSpinner.stop("Resolved dependencies");
+  return allComponents;
 }

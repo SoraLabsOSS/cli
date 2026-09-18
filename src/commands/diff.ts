@@ -1,53 +1,13 @@
 import { outro } from "@clack/prompts";
-import type { RegistryItem } from "@/types.js";
-import { error, sanitize } from "@/utils/colors.js";
+import { error } from "@/utils/colors.js";
 import { detectConfig } from "@/utils/detect.js";
 import { diffComponentFiles, printFileDiff } from "@/utils/diff.js";
-import { spinner } from "@/utils/spinner.js";
-import { flattenTree, resolveTree } from "@/utils/tree.js";
+import { resolveComponentList } from "@/utils/tree.js";
 
 interface DiffOptions {
   cwd?: string;
   path?: string;
   registry?: string;
-}
-
-async function resolveComponentsForDiff(
-  names: string[],
-  registry: string | undefined,
-  shadcnStyle: string | undefined
-): Promise<RegistryItem[] | null> {
-  const loadingSpinner = spinner();
-  loadingSpinner.start("Resolving dependencies...");
-
-  const allComponents: RegistryItem[] = [];
-  const fetchSeen = new Set<string>();
-  const collected = new Set<string>();
-
-  for (const name of names) {
-    if (fetchSeen.has(name)) {
-      continue;
-    }
-
-    try {
-      loadingSpinner.message(`Resolving ${name}...`);
-      // biome-ignore lint/performance/noAwaitInLoops: sequential — fetchSeen must update between fetches
-      const tree = await resolveTree(name, registry, fetchSeen, shadcnStyle);
-      for (const item of flattenTree(tree)) {
-        if (!collected.has(item.name)) {
-          collected.add(item.name);
-          allComponents.push(item);
-        }
-      }
-    } catch (err) {
-      loadingSpinner.error(`Failed to resolve ${name}`);
-      error(sanitize((err as Error).message));
-      return null;
-    }
-  }
-
-  loadingSpinner.stop("Resolved dependencies");
-  return allComponents;
 }
 
 /**
@@ -72,7 +32,7 @@ export async function diff(
     config.componentPath = options.path;
   }
 
-  const allComponents = await resolveComponentsForDiff(
+  const allComponents = await resolveComponentList(
     componentNames,
     options.registry,
     config.shadcnStyle

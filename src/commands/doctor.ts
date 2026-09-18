@@ -5,6 +5,7 @@ import { active, bar, done, error, sanitize, warn } from "@/utils/colors.js";
 import {
   detectConfig,
   findAncestorDependency,
+  findAncestorFile,
   findPackageManagerEvidence,
   isAstroProject,
   LOCKFILES,
@@ -71,28 +72,14 @@ function checkNodeVersion(): CheckResult {
  * up correctly.
  */
 function checkProjectRoot(cwd: string): CheckResult {
-  let dir = cwd;
-  for (;;) {
-    if (existsSync(join(dir, "package.json"))) {
-      return {
-        id: "project-root",
-        label: "Project",
-        message: "package.json found.",
-        status: "pass",
-      };
-    }
-    const parent = dirname(dir);
-    if (parent === dir) {
-      break;
-    }
-    dir = parent;
-  }
+  const found = findAncestorFile(cwd, "package.json");
   return {
     id: "project-root",
     label: "Project",
-    message:
-      "No package.json found in this directory or any parent — this doesn't look like a Node.js project. Run doctor from inside your project.",
-    status: "warn",
+    message: found
+      ? "package.json found."
+      : "No package.json found in this directory or any parent — this doesn't look like a Node.js project. Run doctor from inside your project.",
+    status: found ? "pass" : "warn",
   };
 }
 
