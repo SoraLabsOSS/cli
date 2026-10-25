@@ -1,10 +1,17 @@
+import { existsSync, readFileSync } from "node:fs";
+import { isAbsolute, resolve } from "node:path";
 import {
   DEFAULT_REGISTRY,
   DEFAULT_SHADCN_STYLE,
   REGISTRIES,
   SHADCN_REGISTRY_URL_TEMPLATE,
 } from "@/constants.js";
-import type { Registry, RegistryItem } from "@/types.js";
+import type {
+  ComponentAddress,
+  ProjectConfig,
+  Registry,
+  RegistryItem,
+} from "@/types.js";
 import { sanitize } from "@/utils/colors.js";
 
 /**
@@ -16,6 +23,7 @@ export class ComponentNotFoundError extends Error {}
 
 const HTTP_URL = /^https?:\/\//;
 const TRAILING_SLASH = /\/$/;
+const LEADING_AT = /^@/;
 const LOCAL_HOSTNAMES = new Set(["127.0.0.1", "::1", "[::1]", "localhost"]);
 // Bounds every registry request — without it, a host that silently drops
 // packets (instead of refusing the connection) leaves commands hanging on
@@ -102,11 +110,13 @@ async function tryExtractErrorDetail(
 async function fetchJson<T>(
   url: string,
   notFound: () => Error,
-  validate: (data: unknown) => asserts data is T
+  validate: (data: unknown) => asserts data is T,
+  headers?: Record<string, string>
 ): Promise<T> {
   let response: Response;
   try {
     response = await fetch(url, {
+      headers,
       signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
     });
   } catch (err) {
@@ -271,6 +281,191 @@ export async function fetchShadcnComponent(
       );
     }
     throw err;
+  }
+}
+
+export async function fetchFromUrl(url: string): Promise<RegistryItem> {
+  assertSecureRegistryUrl(url);
+  return await fetchJson(
+    url,
+    () => new ComponentNotFoundError(`Component file not found at URL: ${url}`),
+    assertRegistryItem
+  );
+}
+
+export function readFromLocalFile(filePath: string, cwd: string): RegistryItem {
+  const resolvedPath = isAbsolute(filePath) ? filePath : resolve(cwd, filePath);
+  if (!existsSync(resolvedPath)) {
+    throw new ComponentNotFoundError(
+      `Local component file not found: "${filePath}" (resolved to ${resolvedPath}).`
+    );
+  }
+  let data: unknown;
+  try {
+    data = JSON.parse(readFileSync(resolvedPath, "utf8"));
+  } catch (err) {
+    throw new Error(
+      `Local file "${filePath}" returned invalid JSON: ${(err as Error).message}`,
+      { cause: err }
+    );
+  }
+  assertRegistryItem(data);
+  return data;
+}
+
+export async function fetchFromGitHub(address: {
+  item: string;
+  owner: string;
+  ref?: string;
+  repo: string;
+}): Promise<RegistryItem> {
+  const ref = address.ref ?? "HEAD";
+  const candidates = [
+    `https://raw.githubusercontent.com/${address.owner}/${address.repo}/${ref}/r/${address.item}.json`,
+    `https://raw.githubusercontent.com/${address.owner}/${address.repo}/${ref}/public/r/${address.item}.json`,
+    `https://raw.githubusercontent.com/${address.owner}/${address.repo}/${ref}/${address.item}.json`,
+  ];
+  const headers: Record<string, string> = {};
+  if (process.env.GITHUB_TOKEN) {
+    headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
+  }
+
+  let lastError: Error | null = null;
+  for (const url of candidates) {
+    try {
+      // biome-ignore lint/performance/noAwaitInLoops: fallback URL probing
+      return await fetchJson(
+        url,
+        () => new ComponentNotFoundError(`Not found at ${url}`),
+        assertRegistryItem,
+        headers
+      );
+    } catch (err) {
+      if (err instanceof ComponentNotFoundError) {
+        lastError = err;
+        continue;
+      }
+      throw err;
+    }
+  }
+  throw new ComponentNotFoundError(
+    `Component "${address.item}" not found in GitHub repository ${address.owner}/${address.repo}#${ref}.`,
+    { cause: lastError }
+  );
+}
+
+export async function fetchFromNamespace(
+  namespace: string,
+  item: string,
+  config?: ProjectConfig,
+  registryOverride?: string
+): Promise<{ fromShadcn: boolean; item: RegistryItem }> {
+  if (namespace === "@shadcn") {
+    const fetched = await fetchShadcnComponent(item, config?.shadcnStyle);
+    return { fromShadcn: true, item: fetched };
+  }
+
+  let targetUrl: string | undefined;
+  if (registryOverride) {
+    targetUrl = resolveRegistryUrl(registryOverride);
+  } else if (config?.registries?.[namespace]) {
+    targetUrl = config.registries[namespace];
+  } else {
+    const bareScope = namespace.replace(LEADING_AT, "");
+    if (config?.registries?.[bareScope]) {
+      targetUrl = config.registries[bareScope];
+    } else if (REGISTRIES[bareScope]) {
+      targetUrl = REGISTRIES[bareScope];
+    }
+  }
+
+  if (!targetUrl) {
+    throw new Error(
+      `Unknown registry namespace "${namespace}". Define it in components.json under "registries" (e.g. "${namespace}": "https://..."), or pass --registry.`
+    );
+  }
+
+  let url: string;
+  if (targetUrl.includes("{name}")) {
+    url = targetUrl.replace("{name}", encodeURIComponent(item));
+    if (config?.shadcnStyle && url.includes("{style}")) {
+      url = url.replace("{style}", encodeURIComponent(config.shadcnStyle));
+    }
+  } else {
+    const base = targetUrl.replace(TRAILING_SLASH, "");
+    url = base.endsWith("/r")
+      ? `${base}/${item}.json`
+      : `${base}/r/${item}.json`;
+  }
+
+  assertSecureRegistryUrl(url);
+  const result = await fetchJson(
+    url,
+    () =>
+      new ComponentNotFoundError(
+        `Component "${item}" not found in registry ${namespace} (${url}).`
+      ),
+    assertRegistryItem
+  );
+
+  return { fromShadcn: url.includes("ui.shadcn.com"), item: result };
+}
+
+export async function fetchComponentByAddress(
+  address: ComponentAddress,
+  config?: ProjectConfig,
+  registryOverride?: string
+): Promise<{ fromShadcn: boolean; item: RegistryItem }> {
+  switch (address.scheme) {
+    case "url": {
+      const item = await fetchFromUrl(address.url);
+      const fromShadcn = address.url.includes("ui.shadcn.com");
+      return { fromShadcn, item: fromShadcn ? withShadcnTargets(item) : item };
+    }
+    case "file": {
+      const item = readFromLocalFile(
+        address.path,
+        config?.cwd ?? process.cwd()
+      );
+      return { fromShadcn: false, item };
+    }
+    case "github": {
+      const item = await fetchFromGitHub(address);
+      return { fromShadcn: false, item };
+    }
+    case "namespace": {
+      return await fetchFromNamespace(
+        address.namespace,
+        address.item,
+        config,
+        registryOverride
+      );
+    }
+    case "bare": {
+      try {
+        const item = await fetchComponent(address.name, registryOverride);
+        return { fromShadcn: false, item };
+      } catch (err) {
+        if (err instanceof ComponentNotFoundError) {
+          try {
+            const item = await fetchShadcnComponent(
+              address.name,
+              config?.shadcnStyle
+            );
+            return { fromShadcn: true, item };
+          } catch (shadcnErr) {
+            throw shadcnErr instanceof ComponentNotFoundError ? err : shadcnErr;
+          }
+        }
+        throw err;
+      }
+    }
+    default: {
+      const unreachable: never = address;
+      throw new Error(
+        `Unhandled address scheme: ${JSON.stringify(unreachable)}`
+      );
+    }
   }
 }
 

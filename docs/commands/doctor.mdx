@@ -1,0 +1,46 @@
+---
+title: "doctor"
+description: "Diagnose and repair project setup and configuration issues"
+---
+
+The `doctor` command runs a comprehensive diagnostic sweep of your local environment, configurations, and network dependencies before component installation.
+
+## Usage
+
+```bash
+npx @soralabs/cli doctor [options]
+```
+
+## Diagnostics Performed
+
+| Check | Requirement | Description |
+| :--- | :--- | :--- |
+| **Node.js Version** | `>= 18.0.0` | Validates runtime version for ESM, fetch, and crypto primitives. |
+| **Tailwind CSS** | `tailwind.config.*` | Detects JS/TS/CJS/MJS Tailwind configuration files. |
+| **Package Manager** | Lockfile evidence | Identifies `bun.lock`, `pnpm-lock.yaml`, `yarn.lock`, or `package-lock.json`. |
+| **Registry Health** | HTTP 200 | Pings the target registry endpoint to verify latency and availability. |
+| **Update Check** | Latest npm release | Checks if a newer `@soralabs/cli` version has been published. |
+
+## Options
+
+### `--cwd, -c <path>`
+Executes the doctor sweep inside a specific workspace directory in a monorepo.
+
+### `--registry <name|url>`
+Validates connectivity and metadata against a custom registry URL.
+
+### `--json`
+Outputs machine-readable JSON status messages. Error logs and non-blocking warnings are routed to stderr, ensuring clean JSON piping on stdout.
+
+```bash
+npx @soralabs/cli doctor --json
+```
+
+## Environment Variables
+
+### `SORA_NO_UPDATE_CHECK`
+Set to `1` or `true` to disable the background npm update check on every invocation.
+
+```bash
+export SORA_NO_UPDATE_CHECK=1
+```

@@ -1,12 +1,5 @@
 import pc from "picocolors";
 
-const SORA_CLI_BANNER = `███████╗ ██████╗ ██████╗  █████╗      ██████╗██╗     ██╗
-██╔════╝██╔═══██╗██╔══██╗██╔══██╗    ██╔════╝██║     ██║
-███████╗██║   ██║██████╔╝███████║    ██║     ██║     ██║
-╚════██║██║   ██║██╔══██╗██╔══██║    ██║     ██║     ██║
-███████║╚██████╔╝██║  ██║██║  ██║    ╚██████╗███████╗██║
-╚══════╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝     ╚═════╝╚══════╝╚═╝`;
-
 // biome-ignore lint/suspicious/noControlCharactersInRegex: intentionally matching control/escape chars to strip them before printing
 const CONTROL_CHARS = /[\x00-\x08\x0B-\x1F\x7F]/g;
 
@@ -26,8 +19,7 @@ export function sanitize(text: string): string {
 }
 
 export function header(): void {
-  console.log(pc.cyan(SORA_CLI_BANNER));
-  console.log(pc.dim("Sora Labs component installer"));
+  console.log(pc.bold("sora-cli") + pc.dim(" — Sora Labs component installer"));
   console.log();
 }
 

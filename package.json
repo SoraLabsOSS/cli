@@ -20,6 +20,7 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
+    "dev:docs": "cd docs && mint dev",
     "test": "bun test",
     "typecheck": "tsc --noEmit",
     "check": "ultracite check",

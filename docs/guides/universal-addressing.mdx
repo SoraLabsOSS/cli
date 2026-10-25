@@ -1,0 +1,79 @@
+---
+title: "Universal Addressing"
+description: "Install components from bare names, direct URLs, GitHub, local files, and scoped namespaces"
+---
+
+Unlike standard CLI tools that are restricted to a single hard-coded domain, `@soralabs/cli` features a **Universal Addressing Engine**.
+
+When you pass a component specifier to `add`, the CLI automatically analyzes its format and resolves it via one of the following schemes:
+
+## 1. Bare Component Names
+
+```bash
+npx @soralabs/cli add text-effect
+```
+
+- First, the CLI looks up `text-effect` inside the active Sora UI registry (`ui.soralabs.studio`).
+- If not found, it automatically checks whether the name corresponds to a standard base primitive (e.g. `button`, `dialog`, `input`) and falls back to `ui.shadcn.com` using the style configured in your `components.json`.
+
+## 2. Direct HTTP / HTTPS URLs
+
+Install any component schema served over the web:
+
+```bash
+npx @soralabs/cli add https://magicui.design/r/marquee.json
+```
+
+The CLI downloads the schema, inspects its `registryDependencies` and `dependencies`, and reconciles all imports automatically.
+
+## 3. GitHub Specifiers
+
+Directly reference component files located in any public GitHub repository:
+
+<CodeGroup>
+```bash github: prefix
+npx @soralabs/cli add github:shadcn-ui/ui#main/button
+```
+
+```bash shorthand
+npx @soralabs/cli add shadcn-ui/ui/button
+```
+</CodeGroup>
+
+You can specify branches, tags, or commit hashes using the `#ref` syntax:
+
+```bash
+npx @soralabs/cli add github:owner/repo#develop/packages/components/custom-card
+```
+
+## 4. Scoped Namespaces (`@scope/item`)
+
+If your project's `components.json` defines custom registries:
+
+```json components.json
+{
+  "registries": {
+    "@magicui": "https://magicui.design/r",
+    "@acme": "https://registry.acme.corp/r"
+  }
+}
+```
+
+You can install directly using the namespace prefix:
+
+```bash
+npx @soralabs/cli add @magicui/marquee
+npx @soralabs/cli add @acme/corporate-header
+```
+
+## 5. Local File Paths
+
+Useful when authoring new components or testing a local registry package before publishing:
+
+```bash
+# Relative path
+npx @soralabs/cli add ./registry/new-card.json
+
+# Explicit JSON schema file
+npx @soralabs/cli add ../shared-ui/r/button.json
+```

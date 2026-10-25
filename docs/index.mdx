@@ -1,0 +1,34 @@
+---
+title: "Introduction"
+description: "The universal CLI for installing motion-first components from any shadcn-compatible registry"
+---
+
+<img src="/assets/sora-ui.png" alt="Sora UI & CLI Banner" className="w-full rounded-xl border border-neutral-200 dark:border-neutral-800 my-4" />
+
+**`@soralabs/cli`** is a standalone CLI tool for installing components from any [shadcn](https://ui.shadcn.com)-compatible registry into your project.
+
+It defaults to the [Sora UI](https://ui.soralabs.studio) motion registry, skipping the extra step of registering scopes — while retaining universal compatibility with any remote registry, local file, or GitHub reference.
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="bolt" href="/quickstart">
+    Get up and running with your first animated component in seconds.
+  </Card>
+  <Card title="CLI Commands" icon="terminal" href="/commands/add">
+    Complete reference for `add`, `list`, `diff`, and `doctor`.
+  </Card>
+  <Card title="Universal Addressing" icon="cube" href="/guides/universal-addressing">
+    Install from bare names, direct URLs, GitHub, or local files.
+  </Card>
+  <Card title="Monorepo Workspaces" icon="folder-tree" href="/guides/monorepos">
+    Cleanly target individual workspace packages using `--cwd`.
+  </Card>
+</CardGroup>
+
+## Why Sora CLI?
+
+- **Motion & AI Ready**: Built to serve the Sora UI ecosystem with first-class animation support (`framer-motion`, `gsap`, Motion) and `prefers-reduced-motion` compliance.
+- **Universal Component Specifiers**: Install not just by name, but via direct JSON URLs, GitHub repos (`owner/repo/item`), or scoped namespaces (`@magicui/item`).
+- **Base Primitives Fallback**: Automatically checks the Sora UI registry first; if a bare name is not found (e.g. `button`, `dialog`), it transparently falls back to `ui.shadcn.com` using your project's configured style.
+- **Intelligent Dependency Resolution**: Flattens nested registry dependencies and installs npm packages automatically using your detected package manager (`bun`, `pnpm`, `yarn`, or `npm`).
+- **Drift Detection**: Use `diff` to inspect changes upstream before upgrading local code.
+- **Environment Diagnostics**: Built-in `doctor` diagnoses missing Tailwind configurations, Node.js version mismatches, and lockfile issues.

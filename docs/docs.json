@@ -1,0 +1,106 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "Sora CLI",
+  "colors": {
+    "primary": "#00A6F4",
+    "light": "#38BDF8",
+    "dark": "#0284C7"
+  },
+  "background": {
+    "color": {
+      "light": "#ffffff",
+      "dark": "#080808"
+    }
+  },
+  "favicon": "/favicon.ico",
+  "navigation": {
+    "pages": [
+      {
+        "group": "Getting Started",
+        "pages": [
+          "index",
+          "quickstart"
+        ]
+      },
+      {
+        "group": "Commands",
+        "pages": [
+          "commands/add",
+          "commands/list",
+          "commands/diff",
+          "commands/doctor"
+        ]
+      },
+      {
+        "group": "Architecture & Guides",
+        "pages": [
+          "guides/universal-addressing",
+          "guides/registries",
+          "guides/monorepos"
+        ]
+      }
+    ],
+    "global": {
+      "anchors": [
+        {
+          "anchor": "Sora UI",
+          "href": "https://ui.soralabs.studio",
+          "icon": "sparkles"
+        },
+        {
+          "anchor": "NPM",
+          "href": "https://www.npmjs.com/package/@soralabs/cli",
+          "icon": "npm"
+        },
+        {
+          "anchor": "GitHub",
+          "href": "https://github.com/SoraLabsOSS/cli",
+          "icon": "github"
+        }
+      ]
+    }
+  },
+  "logo": {
+    "light": "/logo/light.svg",
+    "dark": "/logo/dark.svg"
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "Components",
+        "href": "https://ui.soralabs.studio/catalog"
+      },
+      {
+        "label": "Motion",
+        "href": "https://ui.soralabs.studio/motion"
+      },
+      {
+        "label": "Icons",
+        "href": "https://ui.soralabs.studio/icons"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "GitHub",
+      "href": "https://github.com/SoraLabsOSS/cli"
+    }
+  },
+  "contextual": {
+    "options": [
+      "copy",
+      "view",
+      "chatgpt",
+      "claude",
+      "cursor",
+      "vscode"
+    ]
+  },
+  "footer": {
+    "socials": {
+      "x": "https://x.com/axyl1410",
+      "github": "https://github.com/SoraLabsOSS/cli",
+      "website": "https://ui.soralabs.studio"
+    }
+  }
+}

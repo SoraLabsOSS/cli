@@ -1,0 +1,75 @@
+---
+title: "Quickstart"
+description: "Start installing Sora UI and shadcn components in under a minute"
+---
+
+Follow this guide to configure your project and install your first component.
+
+## Prerequisites
+
+1. **Node.js**: Version 18.0.0 or higher.
+2. **Project Setup**: Ensure your project has Tailwind CSS and import aliases (`@/*`) configured. If starting fresh, run:
+   ```bash
+   npx shadcn@latest init
+   ```
+
+## Step 1: Install your first component
+
+Run the CLI with your package manager of choice. No global install is necessary:
+
+<CodeGroup>
+```bash pnpm
+pnpm dlx @soralabs/cli@latest add text-effect
+```
+
+```bash bun
+bunx --bun @soralabs/cli@latest add text-effect
+```
+
+```bash npm
+npx @soralabs/cli@latest add text-effect
+```
+
+```bash yarn
+yarn dlx @soralabs/cli@latest add text-effect
+```
+</CodeGroup>
+
+When executed, the CLI will:
+1. Fetch component schema and animation code from `https://ui.soralabs.studio/r/text-effect.json`.
+2. Automatically resolve required npm packages (e.g. `motion`, `clsx`, `tailwind-merge`).
+3. Place component files into your project under `components/sora-ui/`.
+4. Run your package manager install command in the background.
+
+## Step 2: Interactive picker
+
+If you want to explore available components visually, invoke `add` without specifying a component name:
+
+```bash
+npx @soralabs/cli add
+```
+
+Use your arrow keys to scroll, press `Space` to select multiple components, and hit `Enter` to install.
+
+## Step 3: Run diagnostics
+
+Run `doctor` at any time to verify that your project environment is fully compatible:
+
+```bash
+npx @soralabs/cli doctor
+```
+
+This verifies:
+- Node.js runtime version compatibility (`>= 18`).
+- Existence and configuration of `tailwind.config.*`.
+- Detection of the active package manager and lockfile.
+- Registry network connectivity and latency.
+- Whether a newer version of `@soralabs/cli` is available.
+
+---
+
+## Helpful Links
+
+- [Sora UI Component Catalog](https://ui.soralabs.studio/catalog)
+- [Sora UI Motion Primitives](https://ui.soralabs.studio/motion)
+- [GitHub Repository](https://github.com/SoraLabsOSS/cli)

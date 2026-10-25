@@ -1,0 +1,44 @@
+---
+title: "Custom Registries"
+description: "How @soralabs/cli resolves and installs components from any shadcn registry"
+---
+
+`@soralabs/cli` is built to be registry-agnostic. While it ships configured for Sora Labs products, you can point it at any registry following the standard shadcn distribution pattern.
+
+## How Registries Work
+
+A shadcn-compatible registry serves JSON files over HTTPS:
+
+* **Index**: `<registry-url>/r/registry.json` lists all available components, their descriptions, and metadata.
+* **Component Item**: `<registry-url>/r/<name>.json` contains the source code, type definitions, npm dependencies, and any dependencies on other registry components.
+
+## Using the `--registry` Flag
+
+You can point to any registry by passing its full HTTPS URL:
+
+```bash
+npx @soralabs/cli add animated-button --registry https://ui.example.com
+```
+
+### Predefined Keys
+
+For frequently used registries, short keys can be mapped. By default, `ui` points to `https://ui.soralabs.studio`:
+
+```bash
+npx @soralabs/cli add text-effect --registry ui
+```
+
+## Dependency Resolution
+
+When installing a component, `@soralabs/cli` automatically resolves two types of dependencies:
+
+1. **Registry Dependencies**: Other UI components required by the target component.
+   * If provided by the current registry, they are pulled from `<registry-url>/r/<name>.json`.
+   * If they refer to bare shadcn base components (e.g., `button`, `dialog`), they are automatically fetched from `https://ui.shadcn.com/r/styles/...` matching your project's configured style in `components.json`.
+2. **NPM Dependencies**: Packages required by the component (e.g. `framer-motion`, `lucide-react`). These are installed automatically using your project's detected package manager.
+
+## Security Considerations
+
+Registry components are copied into your source tree and execute directly within your application runtime.
+- Only consume registries that you trust.
+- In production pipelines, verify changes using `diff` or inspect component source code with `--view`.

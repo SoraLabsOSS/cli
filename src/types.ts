@@ -46,6 +46,19 @@ export interface Registry {
   name: string;
 }
 
+export type ComponentAddress =
+  | { scheme: "url"; url: string }
+  | { scheme: "file"; path: string }
+  | {
+      scheme: "github";
+      owner: string;
+      repo: string;
+      item: string;
+      ref?: string;
+    }
+  | { scheme: "namespace"; namespace: string; item: string }
+  | { scheme: "bare"; name: string };
+
 export type PackageManager = "bun" | "pnpm" | "yarn" | "npm";
 
 /**
@@ -78,6 +91,11 @@ export interface ProjectConfig {
    */
   cwd: string;
   packageManager: PackageManager;
+  /**
+   * Optional custom registries declared in components.json under the
+   * "registries" key, mapping a namespace (e.g. "@magicui") to its base URL.
+   */
+  registries?: Record<string, string>;
   /**
    * The shadcn style from `components.json` ("new-york-v4" when absent) —
    * shadcn's base registry serves per-style variants of its components, so

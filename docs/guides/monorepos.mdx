@@ -1,0 +1,38 @@
+---
+title: "Monorepo Workspaces"
+description: "Managing UI components across Turborepo, Bun, and pnpm workspaces"
+---
+
+In monorepo setups, components typically live inside a shared UI package (such as `packages/ui` or `apps/web/src/components`) rather than the repository root.
+
+## The `--cwd` Flag
+
+Use the `--cwd` (or `-c`) flag to instruct the CLI to operate inside a specific package directory:
+
+```bash
+npx @soralabs/cli add card --cwd packages/ui
+```
+
+### Why `--cwd` instead of `--path`?
+
+* `--path` only overrides where files are written on disk without updating context.
+* `--cwd` treats the specified folder as the active root:
+  - Detects `components.json` and path aliases from `packages/ui/tsconfig.json`.
+  - Installs npm packages directly into `packages/ui/package.json`.
+  - Resolves lockfiles from the monorepo root automatically.
+
+## Common Monorepo Examples
+
+<CodeGroup>
+```bash Turborepo / pnpm
+pnpm dlx @soralabs/cli add text-effect --cwd packages/ui
+```
+
+```bash Bun Workspaces
+bunx @soralabs/cli add text-effect --cwd packages/ui
+```
+
+```bash Next.js App in Monorepo
+npx @soralabs/cli add text-effect --cwd apps/web
+```
+</CodeGroup>

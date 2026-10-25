@@ -542,7 +542,8 @@ export async function add(
     selectedComponents,
     options.registry,
     config.shadcnStyle,
-    (tree) => trees.push(tree)
+    (tree) => trees.push(tree),
+    config
   );
   if (!allComponents) {
     return false;

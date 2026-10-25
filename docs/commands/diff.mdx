@@ -1,0 +1,41 @@
+---
+title: "diff"
+description: "Compare locally installed components against upstream registry versions"
+---
+
+Because components are copied directly into your codebase rather than installed as an immutable npm package, they can diverge as the upstream registry releases updates or fixes.
+
+The `diff` command checks your local component files against the current version in the registry and displays line-by-line diffs.
+
+## Usage
+
+```bash
+npx @soralabs/cli diff <components...> [options]
+```
+
+## Examples
+
+```bash
+# Compare a single component
+npx @soralabs/cli diff text-effect
+
+# Compare multiple components
+npx @soralabs/cli diff text-effect draw-underline-link
+
+# Compare within a monorepo workspace
+npx @soralabs/cli diff card --cwd packages/ui
+```
+
+## Options
+
+### `--cwd, -c <path>`
+Specifies the workspace directory to locate installed components.
+
+### `--registry <name|url>`
+Specifies the registry URL or key to compare against (defaults to `ui`).
+
+> [!TIP]
+> If `diff` detects updates that you wish to accept, re-run `add` with `--force`:
+> ```bash
+> npx @soralabs/cli add text-effect --force
+> ```

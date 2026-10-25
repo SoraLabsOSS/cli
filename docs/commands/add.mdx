@@ -1,0 +1,104 @@
+---
+title: "add"
+description: "Universal component installer for Sora UI and shadcn-compatible registries"
+---
+
+The `add` command resolves the dependency tree for requested components, writes source files into your project, and installs npm dependencies with your detected package manager (`bun`, `pnpm`, `yarn`, or `npm`).
+
+## Usage
+
+```bash
+npx @soralabs/cli add [components...] [options]
+```
+
+### Quick Examples
+
+<CodeGroup>
+```bash Bare Names
+npx @soralabs/cli add text-effect
+```
+
+```bash Multiple Items
+npx @soralabs/cli add text-effect draw-underline-link button
+```
+
+```bash Interactive Picker
+npx @soralabs/cli add
+```
+
+```bash Direct URL
+npx @soralabs/cli add https://magicui.design/r/marquee.json
+```
+
+```bash GitHub Specifier
+npx @soralabs/cli add shadcn-ui/ui/button
+```
+
+```bash Monorepo Target
+npx @soralabs/cli add card --cwd packages/ui
+```
+</CodeGroup>
+
+---
+
+## Options
+
+### `--cwd, -c <path>`
+Runs the command as if started inside `<path>`. 
+Specifically designed for monorepos: detects `tsconfig.json` and `components.json` inside the specified workspace (e.g., `packages/ui` or `apps/web`), installing dependencies into that workspace's `package.json`.
+
+```bash
+npx @soralabs/cli add card --cwd packages/ui
+```
+
+### `--path <path>`
+Overrides the target directory where component files are written without modifying root configuration context.
+*(Default: `components/sora-ui/`)*
+
+```bash
+npx @soralabs/cli add text-effect --path src/components/ui
+```
+
+### `--registry <name|url>`
+Product registry key (default: `ui`) or an external HTTPS registry endpoint.
+
+```bash
+# Sora Labs product key
+npx @soralabs/cli add text-effect --registry ui
+
+# External registry
+npx @soralabs/cli add card --registry https://any-shadcn-registry.com
+```
+
+> [!NOTE]
+> External registries must use `https://`. Insecure `http://` is allowed exclusively for `localhost` and `127.0.0.1` during local registry testing.
+
+### `--yes, -y`
+Skips the installation confirmation prompt.
+
+> [!IMPORTANT]
+> When executing the CLI inside CI/CD pipelines, Docker builds, or automated agent scripts (where there is no interactive TTY), `add` without `--yes` will exit cleanly without modifying files. Pair `--yes` with `--force` in automated environments.
+
+### `--force`
+Overwrites existing local files without asking for confirmation.
+
+```bash
+npx @soralabs/cli add text-effect --force --yes
+```
+
+### `--dry-run`
+Simulates the entire execution pipeline. Prints which files would be written and which npm dependencies would be installed, without making any modifications to disk.
+
+```bash
+npx @soralabs/cli add text-effect --dry-run
+```
+
+### `--view`
+Outputs resolved component source files directly to stdout instead of writing them to disk.
+
+```bash
+npx @soralabs/cli add text-effect --view
+```
+
+### `--silent, -s`
+Suppresses detailed per-file output, printing only the summary completion line.

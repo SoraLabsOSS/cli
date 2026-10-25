@@ -1,0 +1,40 @@
+---
+title: "list"
+description: "List all components available in the registry"
+---
+
+The `list` command queries the selected registry and displays every installable component along with its description.
+
+## Usage
+
+```bash
+npx @soralabs/cli list [options]
+```
+
+## Options
+
+### `--registry <name|url>`
+Queries a specific registry instead of the default `ui` registry.
+
+```bash
+npx @soralabs/cli list --registry https://any-shadcn-registry.com
+```
+
+### `--json`
+Outputs the list of components and metadata in JSON format. This is useful when scripting or piping results into tools like `jq`.
+
+```bash
+npx @soralabs/cli list --json
+```
+
+Example JSON output structure:
+```json
+[
+  {
+    "name": "text-effect",
+    "description": "Animate text with staggering effects",
+    "dependencies": ["framer-motion"],
+    "type": "registry:ui"
+  }
+]
+```

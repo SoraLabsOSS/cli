@@ -150,9 +150,11 @@ export function isAstroProject(cwd: string): boolean {
  * where it's present, since a project can point "hooks" and "lib" at
  * different roots than "components".
  */
-function readComponentsJson(
-  cwd: string
-): { aliases?: Partial<ComponentAliases>; style?: string } | null {
+function readComponentsJson(cwd: string): {
+  aliases?: Partial<ComponentAliases>;
+  registries?: Record<string, string>;
+  style?: string;
+} | null {
   const path = join(cwd, "components.json");
   if (!existsSync(path)) {
     return null;
@@ -160,6 +162,7 @@ function readComponentsJson(
   try {
     return JSON.parse(readFileSync(path, "utf8")) as {
       aliases?: Partial<ComponentAliases>;
+      registries?: Record<string, string>;
       style?: string;
     };
   } catch {
@@ -278,6 +281,7 @@ export function detectConfig(cwd: string): ProjectConfig {
       : DEFAULT_COMPONENT_PATH,
     cwd,
     packageManager: detectPackageManager(cwd),
+    registries: componentsJson?.registries,
     shadcnStyle: componentsJson?.style,
     srcDir,
     tsconfigPathsConfigured: configured,

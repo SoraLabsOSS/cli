@@ -35,7 +35,9 @@ export async function diff(
   const allComponents = await resolveComponentList(
     componentNames,
     options.registry,
-    config.shadcnStyle
+    config.shadcnStyle,
+    undefined,
+    config
   );
   if (!allComponents) {
     return false;

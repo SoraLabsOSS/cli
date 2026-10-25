@@ -4,6 +4,18 @@
 
 A CLI for installing components from any [shadcn](https://ui.shadcn.com)-compatible registry into your project — defaults to [Sora UI](https://ui.soralabs.studio) and other Sora Labs products, but works against any registry via `--registry <url>`.
 
+## Supported by
+
+Sora CLI is supported by the open-source ecosystem. Special thanks to:
+
+<a href="https://mintlify.com" target="_blank" rel="noopener noreferrer">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://cdn.soralabs.studio/logos/partners/mintlify-dark.svg" />
+    <source media="(prefers-color-scheme: light)" srcset="https://cdn.soralabs.studio/logos/partners/mintlify-light.svg" />
+    <img src="https://cdn.soralabs.studio/logos/partners/mintlify-light.svg" alt="Mintlify" height="24" />
+  </picture>
+</a>
+
 ## Usage
 
 ```bash
