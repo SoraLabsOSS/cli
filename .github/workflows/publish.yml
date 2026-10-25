@@ -35,7 +35,7 @@ jobs:
       - name: Sync Socket badge version in README
         run: |
           VERSION=$(node -p "require('./package.json').version")
-          sed -i -E "s#(badge\.socket\.dev/npm/package/@soralabsoss/sora-cli/)[^)]+#\1${VERSION}#; s#(socket\.dev/npm/package/@soralabsoss/sora-cli/overview/)[^)]+#\1${VERSION}#" README.md
+          sed -i -E "s#(badge\.socket\.dev/npm/package/@soralabs/cli/)[^)]+#\1${VERSION}#; s#(socket\.dev/npm/package/@soralabs/cli/overview/)[^)]+#\1${VERSION}#" README.md
           if ! git diff --quiet -- README.md; then
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"

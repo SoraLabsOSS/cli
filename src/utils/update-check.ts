@@ -1,5 +1,4 @@
-const REGISTRY_URL =
-  "https://registry.npmjs.org/@soralabsoss%2Fsora-cli/latest";
+const REGISTRY_URL = "https://registry.npmjs.org/@soralabs%2Fcli/latest";
 const CHECK_TIMEOUT_MS = 1000;
 
 export function parseVersionParts(version: string): number[] {
@@ -59,6 +58,6 @@ export function startUpdateCheck(
 
 export function printUpdateNotice(latest: string, current: string): void {
   console.error(
-    `\nA new version of sora-cli is available: ${current} → ${latest}\nRun "npm i -g @soralabsoss/sora-cli" to update.\n`
+    `\nA new version of sora-cli is available: ${current} → ${latest}\nRun "npm i -g @soralabs/cli" to update.\n`
   );
 }

@@ -371,7 +371,7 @@ async function checkCliVersion(currentVersion: string): Promise<CheckResult> {
     return {
       id: "cli-version",
       label: "sora-cli version",
-      message: `${currentVersion} installed, ${latest} available — run "npm i -g @soralabsoss/sora-cli" to update.`,
+      message: `${currentVersion} installed, ${latest} available — run "npm i -g @soralabs/cli" to update.`,
       status: "warn",
     };
   }

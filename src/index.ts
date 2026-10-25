@@ -19,7 +19,7 @@ const [command] = args;
 
 function printHelp(): void {
   header();
-  console.log("Usage: npx @soralabsoss/sora-cli <command> [options]");
+  console.log("Usage: npx @soralabs/cli <command> [options]");
   console.log();
   console.log("Commands:");
   console.log("  add [components...]   Add components to your project");
@@ -62,23 +62,21 @@ function printHelp(): void {
   );
   console.log();
   console.log("Examples:");
-  console.log("  npx @soralabsoss/sora-cli add text-effect");
+  console.log("  npx @soralabs/cli add text-effect");
+  console.log("  npx @soralabs/cli add text-effect draw-underline-link");
   console.log(
-    "  npx @soralabsoss/sora-cli add text-effect draw-underline-link"
+    "  npx @soralabs/cli add                         # Interactive mode"
   );
+  console.log("  npx @soralabs/cli list");
   console.log(
-    "  npx @soralabsoss/sora-cli add                         # Interactive mode"
+    "  npx @soralabs/cli add some-item --registry https://your-registry.example.com   # any shadcn-compatible registry"
   );
-  console.log("  npx @soralabsoss/sora-cli list");
+  console.log("  npx @soralabs/cli diff text-effect");
   console.log(
-    "  npx @soralabsoss/sora-cli add some-item --registry https://your-registry.example.com   # any shadcn-compatible registry"
+    "  npx @soralabs/cli add card --cwd packages/ui       # install into a monorepo workspace"
   );
-  console.log("  npx @soralabsoss/sora-cli diff text-effect");
-  console.log(
-    "  npx @soralabsoss/sora-cli add card --cwd packages/ui       # install into a monorepo workspace"
-  );
-  console.log("  npx @soralabsoss/sora-cli doctor");
-  console.log("  npx @soralabsoss/sora-cli doctor --json");
+  console.log("  npx @soralabs/cli doctor");
+  console.log("  npx @soralabs/cli doctor --json");
 }
 
 async function runAdd(): Promise<void> {

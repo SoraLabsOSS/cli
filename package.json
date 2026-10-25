@@ -16,7 +16,7 @@
     "typescript": "^5.7.0",
     "ultracite": "7.9.4"
   },
-  "name": "@soralabsoss/sora-cli",
+  "name": "@soralabs/cli",
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",

@@ -212,7 +212,7 @@ describe("printUpdateNotice", () => {
     const printed = String(errorSpy.mock.calls[0]?.[0]);
     expect(printed).toContain("1.0.0");
     expect(printed).toContain("2.0.0");
-    expect(printed).toContain("npm i -g @soralabsoss/sora-cli");
+    expect(printed).toContain("npm i -g @soralabs/cli");
 
     errorSpy.mockRestore();
   });
