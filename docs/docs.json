@@ -13,7 +13,10 @@
       "dark": "#080808"
     }
   },
-  "favicon": "/favicon.ico",
+  "favicon": {
+    "light": "/favicon.ico",
+    "dark": "/favicon.ico"
+  },
   "navigation": {
     "pages": [
       {
@@ -102,5 +105,8 @@
       "github": "https://github.com/SoraLabsOSS/cli",
       "website": "https://ui.soralabs.studio"
     }
+  },
+  "seo": {
+    "indexing": "all"
   }
 }
