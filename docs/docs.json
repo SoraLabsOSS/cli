@@ -14,8 +14,8 @@
     }
   },
   "favicon": {
-    "light": "/favicon.ico",
-    "dark": "/favicon.ico"
+    "light": "/favicon.svg",
+    "dark": "/favicon-dark.svg"
   },
   "navigation": {
     "pages": [

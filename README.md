@@ -4,6 +4,11 @@
 
 A CLI for installing components from any [shadcn](https://ui.shadcn.com)-compatible registry into your project — defaults to [Sora UI](https://ui.soralabs.studio) and other Sora Labs products, but works against any registry via `--registry <url>`.
 
+## Documentation
+
+- **Official Documentation**: [cli.soralabs.studio](https://cli.soralabs.studio) — full CLI command reference, guides, and universal addressing.
+- **Sora UI Docs**: [ui.soralabs.studio/docs/cli](https://ui.soralabs.studio/docs/cli) — documentation for using the CLI with Sora UI components.
+
 ## Supported by
 
 Sora CLI is supported by the open-source ecosystem. Special thanks to:
