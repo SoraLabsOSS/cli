@@ -54,7 +54,7 @@ describe("ensureUtils", () => {
     expect(result).toBe("written");
     const destPath = join(tempDir, "src", "lib", "utils.ts");
     expect(existsSync(destPath)).toBe(true);
-    expect(readFileSync(destPath, "utf8")).toContain("export function cn");
+    expect(readFileSync(destPath, "utf8")).toContain('export { cn } from "cn"');
   });
 
   test("returns exists when file already present", () => {

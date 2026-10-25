@@ -306,7 +306,7 @@ function checkUtilsDeps(config: ProjectConfig): CheckResult {
 
   // Ancestor walk like the tailwind/react checks — in a monorepo these can
   // legitimately be declared (or hoisted) at the workspace root.
-  const missing = ["clsx", "tailwind-merge"].filter(
+  const missing = ["cn"].filter(
     (dep) => !findAncestorDependency(config.cwd, dep)
   );
   if (missing.length > 0) {
@@ -321,7 +321,7 @@ function checkUtilsDeps(config: ProjectConfig): CheckResult {
   return {
     id: "utils-deps",
     label: "cn() utils dependencies",
-    message: "clsx and tailwind-merge installed.",
+    message: "cn installed.",
     status: "pass",
   };
 }

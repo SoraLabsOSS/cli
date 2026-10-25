@@ -132,12 +132,8 @@ async function collectDepsAndConfirm(
   );
 
   const collected = collectNpmDeps(allComponents);
-  if (needsUtils) {
-    for (const dep of ["clsx", "tailwind-merge"]) {
-      if (!collected.dependencies.includes(dep)) {
-        collected.dependencies.push(dep);
-      }
-    }
+  if (needsUtils && !collected.dependencies.includes("cn")) {
+    collected.dependencies.push("cn");
   }
   assertSafeDependencies([
     ...collected.dependencies,

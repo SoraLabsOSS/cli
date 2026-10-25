@@ -10,12 +10,7 @@ import type {
 
 export type OverwriteChoice = "overwrite" | "skip" | "all";
 
-const CN_UTILS_CONTENT = `import { type ClassValue, clsx } from "clsx";
-import { twMerge } from "tailwind-merge";
-
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
+const CN_UTILS_CONTENT = `export { cn } from "cn";
 `;
 
 /**

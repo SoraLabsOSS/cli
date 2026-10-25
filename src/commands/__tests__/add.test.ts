@@ -174,7 +174,7 @@ describe("add", () => {
     );
     expect(written).toContain("Card");
     expect(existsSync(join(tempDir, "lib/utils.ts"))).toBe(true);
-    expect(spawnCalls).toContainEqual(["install", "clsx", "tailwind-merge"]);
+    expect(spawnCalls).toContainEqual(["install", "clsx", "cn"]);
   });
 
   test("still returns true when the npm install step fails", async () => {
@@ -193,7 +193,7 @@ describe("add", () => {
     writeFileSync(
       join(tempDir, "package.json"),
       JSON.stringify({
-        dependencies: { clsx: "^2.0.0", "tailwind-merge": "^3.0.0" },
+        dependencies: { clsx: "^2.0.0", cn: "^0.5.0" },
       }),
       "utf8"
     );

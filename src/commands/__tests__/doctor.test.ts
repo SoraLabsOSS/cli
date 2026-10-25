@@ -432,7 +432,7 @@ describe("doctor", () => {
     expect(result?.message).toContain("not installed yet");
   });
 
-  test("fails utils-deps when lib/utils.ts exists but clsx/tailwind-merge are missing", async () => {
+  test("fails utils-deps when lib/utils.ts exists but cn is missing", async () => {
     restoreFetch = mockFetch({});
     mkdirSync(join(tempDir, "lib"), { recursive: true });
     writeFileSync(join(tempDir, "lib", "utils.ts"), "export {}", "utf8");
@@ -459,13 +459,13 @@ describe("doctor", () => {
     expect(resultFor("utils-deps")?.status).toBe("fail");
   });
 
-  test("passes utils-deps when clsx/tailwind-merge live at the monorepo root", async () => {
+  test("passes utils-deps when cn lives at the monorepo root", async () => {
     restoreFetch = mockFetch({});
     const root = join(tempDir, "monorepo");
     const workspacePkg = join(root, "packages", "ui");
     mkdirSync(join(workspacePkg, "lib"), { recursive: true });
     writeJson(root, "package.json", {
-      dependencies: { clsx: "^2.0.0", "tailwind-merge": "^2.0.0" },
+      dependencies: { cn: "^0.5.0" },
     });
     writeJson(workspacePkg, "package.json", { name: "@workspace/ui" });
     writeFileSync(join(workspacePkg, "lib", "utils.ts"), "export {}", "utf8");
