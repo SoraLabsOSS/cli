@@ -29,10 +29,14 @@
       {
         "group": "Commands",
         "pages": [
+          "commands/init",
           "commands/add",
           "commands/list",
           "commands/diff",
-          "commands/doctor"
+          "commands/doctor",
+          "commands/build",
+          "commands/validate",
+          "commands/mcp"
         ]
       },
       {

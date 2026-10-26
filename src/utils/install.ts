@@ -7,6 +7,7 @@ import type {
   ProjectConfig,
   RegistryItem,
 } from "@/types.js";
+import { transformRsc } from "@/utils/transform-rsc.js";
 
 export type OverwriteChoice = "overwrite" | "skip" | "all";
 
@@ -156,11 +157,13 @@ async function writeSingleFile(
   relativeTarget: string,
   destPath: string,
   aliases: ComponentAliases,
+  rsc: boolean,
   overwrite: boolean,
   onConflict: (filename: string) => Promise<OverwriteChoice>,
   dryRun: boolean
 ): Promise<{ overwriteAll: boolean; status: FileWriteStatus }> {
-  const newContent = rewriteAliases(content, aliases);
+  const transformed = transformRsc(content, rsc);
+  const newContent = rewriteAliases(transformed, aliases);
   const fileExists = existsSync(destPath);
 
   if (fileExists) {
@@ -237,6 +240,7 @@ export async function writeComponent(
       relativeTarget,
       destPath,
       config.aliases,
+      config.rsc ?? false,
       overwrite,
       onConflict,
       dryRun

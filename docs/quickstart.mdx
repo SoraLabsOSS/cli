@@ -8,10 +8,10 @@ Follow this guide to configure your project and install your first component.
 ## Prerequisites
 
 1. **Node.js**: Version 18.0.0 or higher.
-2. **Project Setup**: Ensure your project has Tailwind CSS and import aliases (`@/*`) configured. If starting fresh, run:
+2. **Project Setup**: Sora CLI works automatically in existing projects with automatic alias and package manager detection. If starting fresh, you can initialize your styling and configuration with:
 
 ```bash
-npx shadcn@latest init
+npx @soralabs/cli init
 ```
 
 ## Step 1: Install your first component
@@ -52,7 +52,15 @@ npx @soralabs/cli add
 
 Use your arrow keys to scroll, press `Space` to select multiple components, and hit `Enter` to install.
 
-## Step 3: Run diagnostics
+## Step 3: Enable AI Assistant Integration (MCP)
+
+Connect Sora CLI to Cursor, Claude Code, or VS Code so your AI assistant can discover and install components directly:
+
+```bash
+npx @soralabs/cli mcp init
+```
+
+## Step 4: Run diagnostics
 
 Run `doctor` at any time to verify that your project environment is fully compatible:
 
@@ -62,7 +70,7 @@ npx @soralabs/cli doctor
 
 This verifies:
 - Node.js runtime version compatibility (`>= 18`).
-- Existence and configuration of `tailwind.config.*`.
+- Existence and configuration of Tailwind CSS and path aliases.
 - Detection of the active package manager and lockfile.
 - Registry network connectivity and latency.
 - Whether a newer version of `@soralabs/cli` is available.

@@ -87,6 +87,78 @@ export function parseDoctorArgs(argv: string[]) {
   };
 }
 
+export function parseInitArgs(argv: string[]) {
+  const { values, positionals } = parseArgs({
+    allowPositionals: true,
+    args: argv,
+    options: {
+      cwd: { short: "c", type: "string" },
+      defaults: { default: false, short: "d", type: "boolean" },
+      force: { default: false, short: "f", type: "boolean" },
+      yes: { default: false, short: "y", type: "boolean" },
+    },
+    strict: false,
+  });
+  return {
+    _: positionals,
+    cwd: values.cwd as string | undefined,
+    defaults: Boolean(values.defaults),
+    force: Boolean(values.force),
+    yes: Boolean(values.yes),
+  };
+}
+
+export function parseBuildArgs(argv: string[]) {
+  const { values, positionals } = parseArgs({
+    allowPositionals: true,
+    args: argv,
+    options: {
+      cwd: { short: "c", type: "string" },
+      output: { short: "o", type: "string" },
+    },
+    strict: false,
+  });
+  return {
+    _: positionals,
+    cwd: values.cwd as string | undefined,
+    output: values.output as string | undefined,
+  };
+}
+
+export function parseValidateArgs(argv: string[]) {
+  const { values, positionals } = parseArgs({
+    allowPositionals: true,
+    args: argv,
+    options: {
+      cwd: { short: "c", type: "string" },
+      json: { default: false, type: "boolean" },
+    },
+    strict: false,
+  });
+  return {
+    _: positionals,
+    cwd: values.cwd as string | undefined,
+    json: Boolean(values.json),
+  };
+}
+
+export function parseMcpArgs(argv: string[]) {
+  const { values, positionals } = parseArgs({
+    allowPositionals: true,
+    args: argv,
+    options: {
+      client: { type: "string" },
+      cwd: { short: "c", type: "string" },
+    },
+    strict: false,
+  });
+  return {
+    _: positionals,
+    client: values.client as string | undefined,
+    cwd: values.cwd as string | undefined,
+  };
+}
+
 export function resolveCwd(cwd: string | undefined): string | null {
   if (!cwd) {
     return process.cwd();

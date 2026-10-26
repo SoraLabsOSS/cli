@@ -37,6 +37,7 @@ import {
   resolveRegistryUrl,
 } from "@/utils/registry.js";
 import { spinner } from "@/utils/spinner.js";
+import { transformRsc } from "@/utils/transform-rsc.js";
 import {
   collectNpmDeps,
   printTree,
@@ -109,7 +110,8 @@ function printComponentFiles(
         continue;
       }
       fileHeader(sanitize(resolveTarget(file, item, config)));
-      console.log(sanitize(rewriteAliases(file.content, config.aliases)));
+      const transformed = transformRsc(file.content, config.rsc ?? false);
+      console.log(sanitize(rewriteAliases(transformed, config.aliases)));
       console.log();
     }
   }

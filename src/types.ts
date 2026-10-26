@@ -97,6 +97,12 @@ export interface ProjectConfig {
    */
   registries?: Record<string, string>;
   /**
+   * Whether the target project is configured for React Server Components (RSC).
+   * True for Next.js App Router projects or when "rsc": true in components.json;
+   * false for Vite, Astro, Remix, Next.js Pages router, etc.
+   */
+  rsc?: boolean;
+  /**
    * The shadcn style from `components.json` ("new-york-v4" when absent) —
    * shadcn's base registry serves per-style variants of its components, so
    * the shadcn-fallback fetch must use the same style the shadcn CLI would.

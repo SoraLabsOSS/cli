@@ -1,0 +1,75 @@
+---
+title: "init"
+description: "Initialize your project with components.json, utility helpers, and base styling"
+---
+
+The `init` command sets up a project for Sora UI and shadcn-compatible components. It generates the `components.json` configuration, creates the standard `cn` utility helper in `lib/utils.ts`, writes base Tailwind CSS variables, and installs foundational dependencies (`clsx`, `tailwind-merge`).
+
+<Note>
+Sora CLI does **not** strictly require `init` before installing components with `add` — the CLI automatically detects aliases, directories, and package managers on the fly. However, `init` is ideal for brand-new projects or when you want an explicit, persisted configuration.
+</Note>
+
+## Usage
+
+```bash
+npx @soralabs/cli init [options]
+```
+
+### Quick Examples
+
+<CodeGroup>
+```bash Interactive Setup
+npx @soralabs/cli init
+```
+
+```bash Automated (CI / Scripts)
+npx @soralabs/cli init --yes
+```
+
+```bash Overwrite Existing Config
+npx @soralabs/cli init --force
+```
+
+```bash Monorepo Workspace
+npx @soralabs/cli init --cwd packages/ui --yes
+```
+</CodeGroup>
+
+---
+
+## Interactive Prompts
+
+When invoked in an interactive terminal, `init` prompts for:
+
+1. **Style**: Choose between `new-york-v4` (Tailwind CSS v4 default) and `new-york` (Tailwind CSS v3).
+2. **Base Color**: Select your theme base color (`zinc`, `slate`, `stone`, `gray`, or `neutral`).
+3. **Global CSS File**: Detected automatically from `globals.css` or `index.css`; custom paths can be entered.
+4. **Import Alias**: The import prefix configured in `tsconfig.json` or `jsconfig.json` (defaults to `@`).
+
+---
+
+## Generated Files
+
+Executing `init` will establish the following artifacts:
+
+| File | Purpose |
+| :--- | :--- |
+| `components.json` | Stores style, aliases, framework RSC settings, and Tailwind configurations. |
+| `lib/utils.ts` | Exports the `cn(...)` utility helper (`clsx` + `tailwind-merge`). |
+| Global CSS (e.g., `app/globals.css`) | Injects initial theme CSS variables (`:root` and `.dark`). |
+
+---
+
+## Options
+
+### `--cwd, -c <path>`
+Specifies the target workspace directory when working in a monorepo.
+
+### `--yes, -y`
+Skips interactive prompts and applies standard defaults (`new-york-v4`, `zinc`, `@/*`).
+
+### `--defaults, -d`
+Applies default project configurations without interactive questions.
+
+### `--force, -f`
+Overwrites an existing `components.json` and utility files without confirmation prompts.

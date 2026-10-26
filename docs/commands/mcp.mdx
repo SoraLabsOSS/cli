@@ -1,0 +1,84 @@
+---
+title: "mcp"
+description: "Model Context Protocol server and 1-click AI editor configuration"
+---
+
+The `mcp` command integrates Sora CLI with AI coding assistants (Cursor, Claude Code, VS Code, Antigravity, Windsurf) through the [Model Context Protocol](https://modelcontextprotocol.io). This allows AI agents to search the registry, inspect component code, and install components automatically according to natural language prompts.
+
+## Usage
+
+### 1. Run MCP Server
+Starts the MCP server over standard I/O for direct protocol communication:
+
+```bash
+npx @soralabs/cli mcp
+```
+
+### 2. Configure AI Clients (1-Click Setup)
+Automatically configures the MCP server in your AI assistant's configuration file:
+
+```bash
+npx @soralabs/cli mcp init [options]
+```
+
+### Quick Examples
+
+<CodeGroup>
+```bash Interactive Client Picker
+npx @soralabs/cli mcp init
+```
+
+```bash Cursor Setup
+npx @soralabs/cli mcp init --client cursor
+```
+
+```bash Claude Code Setup
+npx @soralabs/cli mcp init --client claude
+```
+
+```bash VS Code Setup
+npx @soralabs/cli mcp init --client vscode
+```
+
+```bash Antigravity Setup
+npx @soralabs/cli mcp init --client antigravity
+```
+</CodeGroup>
+
+---
+
+## Supported AI Clients
+
+| Client | Target Configuration File |
+| :--- | :--- |
+| **Cursor** | `.cursor/mcp.json` |
+| **Claude Code** | `.mcp.json` |
+| **VS Code** | `.vscode/mcp.json` |
+| **Antigravity** | `.antigravity/mcp.json` |
+| **Windsurf** | `.codeium/windsurf/mcp_config.json` |
+
+Existing server definitions in your configuration files are preserved intact.
+
+---
+
+## Exposed AI Tools
+
+Once connected, your AI assistant gains access to the following native tools:
+
+| Tool | Purpose |
+| :--- | :--- |
+| **`list_components`** | Fetches the complete catalog of components available in the registry. |
+| **`search_components`** | Searches components by keyword matching against names, titles, and descriptions. |
+| **`view_component`** | Retrieves full component metadata, dependencies, and implementation code. |
+| **`get_add_command`** | Generates the exact CLI install command for requested components. |
+| **`get_project_config`** | Inspects local project settings (package manager, aliases, React Server Component mode). |
+
+---
+
+## Options
+
+### `--client <name>`
+Target AI client to configure: `cursor`, `claude`, `vscode`, `antigravity`, or `windsurf`.
+
+### `--cwd, -c <path>`
+Workspace root directory where client configuration files will be created or updated.

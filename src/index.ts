@@ -1,12 +1,20 @@
 import { add } from "@/commands/add.js";
+import { build } from "@/commands/build.js";
 import { diff } from "@/commands/diff.js";
 import { doctor } from "@/commands/doctor.js";
+import { init } from "@/commands/init.js";
 import { list } from "@/commands/list.js";
+import { initMcpClient, startMcpServer } from "@/commands/mcp.js";
+import { validate } from "@/commands/validate.js";
 import {
   parseAddArgs,
+  parseBuildArgs,
   parseDiffArgs,
   parseDoctorArgs,
+  parseInitArgs,
   parseListArgs,
+  parseMcpArgs,
+  parseValidateArgs,
   resolveCwd,
 } from "@/utils/args.js";
 import { error, header, sanitize } from "@/utils/colors.js";
@@ -22,27 +30,43 @@ function printHelp(): void {
   console.log("Usage: npx @soralabs/cli <command> [options]");
   console.log();
   console.log("Commands:");
+  console.log(
+    "  init                  Initialize project with components.json and styling"
+  );
   console.log("  add [components...]   Add components to your project");
   console.log("  list                  List available components");
   console.log(
     "  diff <components...>  Compare installed components against the registry"
   );
   console.log("  doctor                Diagnose common project setup issues");
+  console.log(
+    "  build [file]          Build registry components into distribution JSON files"
+  );
+  console.log(
+    "  validate [file]       Validate registry.json schema and component files"
+  );
+  console.log(
+    "  mcp [init]            Start MCP server or configure AI assistant integration"
+  );
   console.log();
   console.log("Options:");
   console.log(
     "  --cwd, -c <path>       Run as if started in <path> (for monorepos, e.g. packages/ui)"
+  );
+  console.log(
+    "  --output, -o <path>   Output directory for build command (default: public/r)"
   );
   console.log("  --path <path>         Custom component install path");
   console.log(
     "  --registry <name|url> Product registry key (default: ui) or a full registry URL"
   );
   console.log(
-    "  --force               Overwrite existing files without asking"
+    "  --force, -f           Overwrite existing files without asking"
   );
   console.log(
-    "  --yes, -y             Skip the install confirmation prompt (for scripts/CI)"
+    "  --yes, -y             Skip confirmation prompts (for scripts/CI)"
   );
+  console.log("  --defaults, -d        Use default configurations during init");
   console.log(
     "  --dry-run             Preview changes without writing files or installing packages"
   );
@@ -52,7 +76,9 @@ function printHelp(): void {
   console.log(
     "  --view                Print resolved file contents instead of writing them"
   );
-  console.log("  --json                Output as JSON (list, doctor commands)");
+  console.log(
+    "  --json                Output as JSON (list, doctor, validate commands)"
+  );
   console.log("  --version, -v         Show the CLI version");
   console.log("  --help, -h            Show this help message");
   console.log();
@@ -62,6 +88,7 @@ function printHelp(): void {
   );
   console.log();
   console.log("Examples:");
+  console.log("  npx @soralabs/cli init");
   console.log("  npx @soralabs/cli add text-effect");
   console.log("  npx @soralabs/cli add text-effect draw-underline-link");
   console.log(
@@ -77,6 +104,12 @@ function printHelp(): void {
   );
   console.log("  npx @soralabs/cli doctor");
   console.log("  npx @soralabs/cli doctor --json");
+  console.log(
+    "  npx @soralabs/cli build                       # build registry into public/r"
+  );
+  console.log(
+    "  npx @soralabs/cli validate                    # validate registry.json"
+  );
 }
 
 async function runAdd(): Promise<void> {
@@ -145,7 +178,100 @@ async function runDoctor(): Promise<void> {
   }
 }
 
+async function runInit(): Promise<void> {
+  const parsed = parseInitArgs(args.slice(1));
+  const cwd = resolveCwd(parsed.cwd);
+  if (cwd === null) {
+    process.exitCode = 1;
+    return;
+  }
+
+  const ok = await init({
+    cwd,
+    defaults: parsed.defaults,
+    force: parsed.force,
+    yes: parsed.yes,
+  });
+  if (!ok) {
+    process.exitCode = 1;
+  }
+}
+
+function runBuild(argv: string[]): void {
+  const parsed = parseBuildArgs(argv);
+  const cwd = resolveCwd(parsed.cwd);
+  if (cwd === null) {
+    process.exitCode = 1;
+    return;
+  }
+
+  const [registryFile] = parsed._.map(String);
+  const ok = build(registryFile, {
+    cwd,
+    output: parsed.output,
+  });
+  if (!ok) {
+    process.exitCode = 1;
+  }
+}
+
+function runValidate(argv: string[]): void {
+  const parsed = parseValidateArgs(argv);
+  const cwd = resolveCwd(parsed.cwd);
+  if (cwd === null) {
+    process.exitCode = 1;
+    return;
+  }
+
+  const [registryFile] = parsed._.map(String);
+  const ok = validate(registryFile, {
+    cwd,
+    json: parsed.json,
+  });
+  if (!ok) {
+    process.exitCode = 1;
+  }
+}
+
+async function runMcp(): Promise<void> {
+  const [, sub] = args;
+  if (sub === "init") {
+    const parsed = parseMcpArgs(args.slice(2));
+    const cwd = resolveCwd(parsed.cwd);
+    if (cwd === null) {
+      process.exitCode = 1;
+      return;
+    }
+    const ok = await initMcpClient({ client: parsed.client, cwd });
+    if (!ok) {
+      process.exitCode = 1;
+    }
+    return;
+  }
+  await startMcpServer();
+}
+
+function runRegistry(): void {
+  const [, sub] = args;
+  if (sub === "build") {
+    runBuild(args.slice(2));
+    return;
+  }
+  if (sub === "validate") {
+    runValidate(args.slice(2));
+    return;
+  }
+  error(`Unknown registry command: ${sub ?? ""}`);
+  printHelp();
+  process.exit(1);
+}
+
 async function runCommand(): Promise<void> {
+  if (command === "init") {
+    await runInit();
+    return;
+  }
+
   if (command === "add") {
     await runAdd();
     return;
@@ -163,6 +289,26 @@ async function runCommand(): Promise<void> {
 
   if (command === "doctor") {
     await runDoctor();
+    return;
+  }
+
+  if (command === "build") {
+    runBuild(args.slice(1));
+    return;
+  }
+
+  if (command === "validate") {
+    runValidate(args.slice(1));
+    return;
+  }
+
+  if (command === "mcp") {
+    await runMcp();
+    return;
+  }
+
+  if (command === "registry") {
+    runRegistry();
     return;
   }
 

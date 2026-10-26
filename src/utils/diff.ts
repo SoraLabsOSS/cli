@@ -10,6 +10,7 @@ import {
   resolveTarget,
   rewriteAliases,
 } from "@/utils/install.js";
+import { transformRsc } from "@/utils/transform-rsc.js";
 
 export type FileDiffStatus = "changed" | "not-installed" | "up-to-date";
 
@@ -57,7 +58,8 @@ export function diffComponentFiles(
     }
 
     const localContent = readFileSync(destPath, "utf8");
-    const registryContent = rewriteAliases(file.content, config.aliases);
+    const transformed = transformRsc(file.content, config.rsc ?? false);
+    const registryContent = rewriteAliases(transformed, config.aliases);
 
     if (
       normalizeLineEndings(localContent) ===

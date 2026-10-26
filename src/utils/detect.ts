@@ -153,7 +153,14 @@ export function isAstroProject(cwd: string): boolean {
 function readComponentsJson(cwd: string): {
   aliases?: Partial<ComponentAliases>;
   registries?: Record<string, string>;
+  rsc?: boolean;
   style?: string;
+  tailwind?: {
+    baseColor?: string;
+    config?: string;
+    css?: string;
+    cssVariables?: boolean;
+  };
 } | null {
   const path = join(cwd, "components.json");
   if (!existsSync(path)) {
@@ -163,7 +170,14 @@ function readComponentsJson(cwd: string): {
     return JSON.parse(readFileSync(path, "utf8")) as {
       aliases?: Partial<ComponentAliases>;
       registries?: Record<string, string>;
+      rsc?: boolean;
       style?: string;
+      tailwind?: {
+        baseColor?: string;
+        config?: string;
+        css?: string;
+        cssVariables?: boolean;
+      };
     };
   } catch {
     return null;
@@ -261,6 +275,23 @@ export function findAncestorDependency(
   }
 }
 
+/**
+ * Determines whether the project environment uses React Server Components (RSC).
+ * Respects explicit configuration in components.json when specified; otherwise
+ * infers true when Next.js is present and an `app` directory exists.
+ */
+export function detectRsc(cwd: string, explicitRsc?: boolean): boolean {
+  if (typeof explicitRsc === "boolean") {
+    return explicitRsc;
+  }
+
+  const hasNext = Boolean(findAncestorDependency(cwd, "next"));
+  const hasAppDir =
+    existsSync(join(cwd, "app")) || existsSync(join(cwd, "src", "app"));
+
+  return hasNext && hasAppDir;
+}
+
 export function detectConfig(cwd: string): ProjectConfig {
   const { alias, configured, srcDir } = detectAlias(cwd);
   const componentsJson = readComponentsJson(cwd);
@@ -282,6 +313,7 @@ export function detectConfig(cwd: string): ProjectConfig {
     cwd,
     packageManager: detectPackageManager(cwd),
     registries: componentsJson?.registries,
+    rsc: detectRsc(cwd, componentsJson?.rsc),
     shadcnStyle: componentsJson?.style,
     srcDir,
     tsconfigPathsConfigured: configured,

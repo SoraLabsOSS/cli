@@ -1,0 +1,65 @@
+---
+title: "build"
+description: "Compile and package local components into production-ready registry JSON artifacts"
+---
+
+The `build` command compiles local component source files into a shadcn-compatible JSON registry distribution. It automatically validates definitions, reads component code from disk, embeds source contents into registry schemas, and outputs individual component JSON files alongside a catalog index.
+
+## Usage
+
+```bash
+npx @soralabs/cli build [registry-file] [options]
+```
+
+Or using the `registry` namespace alias:
+
+```bash
+npx @soralabs/cli registry build [registry-file] [options]
+```
+
+### Quick Examples
+
+<CodeGroup>
+```bash Default Registry Build
+npx @soralabs/cli build
+```
+
+```bash Custom Output Directory
+npx @soralabs/cli build -o dist/r
+```
+
+```bash Custom Registry File
+npx @soralabs/cli build my-registry.json --output public/r
+```
+
+```bash Monorepo Workspace
+npx @soralabs/cli build --cwd packages/ui
+```
+</CodeGroup>
+
+---
+
+## What It Produces
+
+When executed, `build` generates:
+
+1. **Component Artifacts (`[name].json`)**:
+   For each item defined in `registry.json`, an individual JSON schema file is generated under `--output` containing:
+   - Metadata (`name`, `type`, `title`, `description`).
+   - Declared `dependencies`, `devDependencies`, and `registryDependencies`.
+   - Embedded file contents (`files: [{ path, content, target, type }]`).
+   - CSS payloads and variable definitions (`css`, `cssVars`).
+
+2. **Catalog Index (`registry.json`)**:
+   A top-level registry catalog placed at the root of the output directory containing metadata and summaries for all components, ready to be hosted as a public registry endpoint.
+
+---
+
+## Options
+
+### `--output, -o <path>`
+Destination directory where JSON distribution files will be generated.
+*(Default: `public/r`)*
+
+### `--cwd, -c <path>`
+Root working directory to resolve relative file paths against.

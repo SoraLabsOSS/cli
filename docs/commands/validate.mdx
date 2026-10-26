@@ -1,0 +1,58 @@
+---
+title: "validate"
+description: "Validate registry schemas, component paths, and dependency integrity"
+---
+
+The `validate` command inspects your local `registry.json` definition to ensure schema correctness, verifies that all referenced source files exist on disk, checks against path traversal risks, and guards against circular dependencies.
+
+## Usage
+
+```bash
+npx @soralabs/cli validate [registry-file] [options]
+```
+
+Or using the `registry` namespace alias:
+
+```bash
+npx @soralabs/cli registry validate [registry-file] [options]
+```
+
+### Quick Examples
+
+<CodeGroup>
+```bash Standard Validation
+npx @soralabs/cli validate
+```
+
+```bash Custom Registry File
+npx @soralabs/cli validate custom-registry.json
+```
+
+```bash JSON Output (CI / Linters)
+npx @soralabs/cli validate --json
+```
+</CodeGroup>
+
+---
+
+## Validation Checks
+
+| Check | Description |
+| :--- | :--- |
+| **JSON Syntax** | Confirms the registry definition is valid, parseable JSON. |
+| **Root Properties** | Ensures required `name`, `homepage`, and `items` fields are present. |
+| **Name Uniqueness** | Detects duplicate component names within the items list. |
+| **File Existence** | Confirms each file referenced in `item.files` physically exists on disk. |
+| **Path Security** | Rejects any file targets that escape the project boundary (path traversal prevention). |
+| **Dependency Formats** | Checks package names for unsafe shell characters or flags. |
+| **Circular Dependencies** | Flags self-referencing `registryDependencies`. |
+
+---
+
+## Options
+
+### `--json`
+Outputs a structured JSON diagnostic report. When valid, exits with code `0`; if errors are discovered, exits with code `1`.
+
+### `--cwd, -c <path>`
+Root working directory to evaluate paths against.
