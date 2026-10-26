@@ -1,6 +1,6 @@
 # @soralabs/cli
 
-[![Socket Badge](https://badge.socket.dev/npm/package/@soralabs/cli/0.5.4)](https://socket.dev/npm/package/@soralabs/cli/overview/0.5.4)
+[![Socket Badge](https://badge.socket.dev/npm/package/@soralabs/cli/0.5.5)](https://socket.dev/npm/package/@soralabs/cli/overview/0.5.5)
 
 A CLI for installing components from any [shadcn](https://ui.shadcn.com)-compatible registry into your project — defaults to [Sora UI](https://ui.soralabs.studio) and other Sora Labs products, but works against any registry via `--registry <url>`.
 
