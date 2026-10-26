@@ -5,6 +5,7 @@ import {
   fetchRegistry,
   fetchShadcnComponent,
   getAvailableComponents,
+  isShadcnUrl,
 } from "@/utils/registry.js";
 
 const REGISTRY_NOT_FOUND = /Registry not found/;
@@ -245,5 +246,23 @@ describe("getAvailableComponents", () => {
     );
     const result = await getAvailableComponents();
     expect(result).toEqual([]);
+  });
+});
+
+describe("isShadcnUrl", () => {
+  test("returns true for ui.shadcn.com URLs", () => {
+    expect(
+      isShadcnUrl("https://ui.shadcn.com/r/styles/new-york/button.json")
+    ).toBe(true);
+    expect(isShadcnUrl("https://ui.shadcn.com/foo")).toBe(true);
+  });
+
+  test("returns false for URLs containing ui.shadcn.com elsewhere", () => {
+    expect(isShadcnUrl("https://evil.com/ui.shadcn.com")).toBe(false);
+    expect(isShadcnUrl("https://evil.com?param=ui.shadcn.com")).toBe(false);
+    expect(
+      isShadcnUrl("https://ui.shadcn.com.evil.com/r/styles/button.json")
+    ).toBe(false);
+    expect(isShadcnUrl("not-a-url")).toBe(false);
   });
 });

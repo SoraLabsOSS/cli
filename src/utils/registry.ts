@@ -54,6 +54,19 @@ export function assertSecureRegistryUrl(url: string): void {
 }
 
 /**
+ * Checks if a URL points to the official shadcn registry (ui.shadcn.com).
+ * Validates the parsed hostname directly to avoid substring sanitization bypasses.
+ */
+export function isShadcnUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return parsed.hostname === "ui.shadcn.com";
+  } catch {
+    return false;
+  }
+}
+
+/**
  * `--registry` accepts either a known Sora Labs product key ("ui") or a
  * full URL of any shadcn-compatible registry — the fetch/validation/alias-
  * rewrite/path-resolution logic here doesn't assume anything Sora-specific,
@@ -408,7 +421,7 @@ export async function fetchFromNamespace(
     assertRegistryItem
   );
 
-  return { fromShadcn: url.includes("ui.shadcn.com"), item: result };
+  return { fromShadcn: isShadcnUrl(url), item: result };
 }
 
 export async function fetchComponentByAddress(
@@ -419,7 +432,7 @@ export async function fetchComponentByAddress(
   switch (address.scheme) {
     case "url": {
       const item = await fetchFromUrl(address.url);
-      const fromShadcn = address.url.includes("ui.shadcn.com");
+      const fromShadcn = isShadcnUrl(address.url);
       return { fromShadcn, item: fromShadcn ? withShadcnTargets(item) : item };
     }
     case "file": {
