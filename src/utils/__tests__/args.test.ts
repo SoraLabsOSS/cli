@@ -6,7 +6,9 @@ import {
   parseAddArgs,
   parseDiffArgs,
   parseDoctorArgs,
+  parseInfoArgs,
   parseListArgs,
+  parseSearchArgs,
   resolveCwd,
 } from "@/utils/args.js";
 
@@ -93,6 +95,37 @@ describe("parseAddArgs", () => {
   test("resolves -c alias to cwd", () => {
     const parsed = parseAddArgs(["-c", "packages/ui"]);
     expect(parsed.cwd).toBe("packages/ui");
+  });
+});
+
+describe("parseSearchArgs", () => {
+  test("parses query positional and flags", () => {
+    const parsed = parseSearchArgs([
+      "text-effect",
+      "-t",
+      "ui",
+      "-l",
+      "10",
+      "--json",
+    ]);
+    expect(parsed.query).toBe("text-effect");
+    expect(parsed.type).toBe("ui");
+    expect(parsed.limit).toBe(10);
+    expect(parsed.json).toBe(true);
+  });
+
+  test("parses -q and --query flag", () => {
+    const parsed = parseSearchArgs(["-q", "button"]);
+    expect(parsed.query).toBe("button");
+  });
+});
+
+describe("parseInfoArgs", () => {
+  test("parses component positional and flags", () => {
+    const parsed = parseInfoArgs(["text-effect", "--json", "--registry", "ui"]);
+    expect(parsed.component).toBe("text-effect");
+    expect(parsed.json).toBe(true);
+    expect(parsed.registry).toBe("ui");
   });
 });
 

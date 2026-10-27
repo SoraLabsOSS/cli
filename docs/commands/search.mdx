@@ -1,0 +1,85 @@
+---
+title: "search"
+description: "Search for components by keyword, title, description, or type"
+---
+
+The `search` command queries the registry catalog and filters components by keyword across their name, title, and description, or by component type.
+
+## Usage
+
+```bash
+npx @soralabs/cli search [query] [options]
+```
+
+Alias: `sora find`
+
+## Examples
+
+```bash
+# Search by keyword
+npx @soralabs/cli search text
+
+# Search with explicit query flag
+npx @soralabs/cli search -q animation
+
+# Filter by component type (ui, hook, etc.)
+npx @soralabs/cli search --type hook
+
+# Combine keyword search with type filtering
+npx @soralabs/cli search effect --type ui
+
+# Limit results
+npx @soralabs/cli search -l 5
+
+# Output as raw JSON for scripting
+npx @soralabs/cli search text --json
+```
+
+## Options
+
+### `-q, --query <string>`
+The search keyword to match against component names, titles, and descriptions. Can also be passed directly as a positional argument.
+
+```bash
+npx @soralabs/cli search -q button
+```
+
+### `-t, --type <string>`
+Filters results by registry item type (e.g. `ui`, `hook`, or full `registry:ui`).
+
+```bash
+npx @soralabs/cli search --type hook
+```
+
+### `-l, --limit <number>`
+Maximum number of search results to display (defaults to `20`).
+
+```bash
+npx @soralabs/cli search text --limit 10
+```
+
+### `--registry <name|url>`
+Queries a specific registry instead of the default `ui` registry.
+
+```bash
+npx @soralabs/cli search card --registry https://any-shadcn-registry.com
+```
+
+### `--json`
+Outputs the matched components in JSON format, ideal for piping into `jq` or custom scripts.
+
+```bash
+npx @soralabs/cli search text --json
+```
+
+Example JSON output structure:
+```json
+[
+  {
+    "name": "text-effect",
+    "title": "Text Effect",
+    "description": "Smooth interactive text animation effect.",
+    "type": "registry:ui"
+  }
+]
+```

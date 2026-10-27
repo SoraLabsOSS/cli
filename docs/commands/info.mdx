@@ -1,0 +1,61 @@
+---
+title: "info"
+description: "Inspect component metadata, dependencies, and file layout before installing"
+---
+
+The `info` command fetches and displays detailed information about a component directly in your terminal, including external npm dependencies, registry dependencies, file destinations, and CSS variable scopes.
+
+## Usage
+
+```bash
+npx @soralabs/cli info <component> [options]
+```
+
+Alias: `sora show`
+
+## Examples
+
+```bash
+# View metadata and dependencies for a component
+npx @soralabs/cli info text-effect
+
+# Inspect a component from a custom registry
+npx @soralabs/cli info button --registry https://ui.shadcn.com
+
+# Output full component schema as JSON
+npx @soralabs/cli info text-effect --json
+```
+
+## Terminal Output
+
+Running `sora info text-effect` produces a structured summary:
+
+```text
+✓ Component: text-effect
+│ Type:          registry:ui
+│ Title:         Text Effect
+│ Description:   Smooth interactive text animation effect.
+│ Dependencies:  motion, clsx
+│ Dev deps:      @types/react
+│ Registry deps: button
+│ Files:         components/text-effect.tsx
+│ CSS Scopes:    :root, .dark, theme
+│
+│ Install with:  npx @soralabs/cli add text-effect
+```
+
+## Options
+
+### `--registry <name|url>`
+Queries a specific registry key or full URL instead of the default `ui` registry.
+
+```bash
+npx @soralabs/cli info button --registry https://ui.shadcn.com
+```
+
+### `--json`
+Prints the full component registry schema as formatted JSON on `stdout`.
+
+```bash
+npx @soralabs/cli info text-effect --json
+```

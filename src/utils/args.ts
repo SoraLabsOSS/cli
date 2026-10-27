@@ -49,6 +49,52 @@ export function parseListArgs(argv: string[]) {
   };
 }
 
+export function parseSearchArgs(argv: string[]) {
+  const { values, positionals } = parseArgs({
+    allowPositionals: true,
+    args: argv,
+    options: {
+      json: { default: false, type: "boolean" },
+      limit: { short: "l", type: "string" },
+      query: { short: "q", type: "string" },
+      registry: { type: "string" },
+      type: { short: "t", type: "string" },
+    },
+    strict: false,
+  });
+  const limitNum = values.limit
+    ? Number.parseInt(values.limit as string, 10)
+    : undefined;
+  return {
+    _: positionals,
+    json: Boolean(values.json),
+    limit: limitNum && !Number.isNaN(limitNum) ? limitNum : undefined,
+    query:
+      (values.query as string | undefined) ??
+      (positionals.length > 0 ? positionals.join(" ") : undefined),
+    registry: values.registry as string | undefined,
+    type: values.type as string | undefined,
+  };
+}
+
+export function parseInfoArgs(argv: string[]) {
+  const { values, positionals } = parseArgs({
+    allowPositionals: true,
+    args: argv,
+    options: {
+      json: { default: false, type: "boolean" },
+      registry: { type: "string" },
+    },
+    strict: false,
+  });
+  return {
+    _: positionals,
+    component: positionals[0] as string | undefined,
+    json: Boolean(values.json),
+    registry: values.registry as string | undefined,
+  };
+}
+
 export function parseDiffArgs(argv: string[]) {
   const { values, positionals } = parseArgs({
     allowPositionals: true,

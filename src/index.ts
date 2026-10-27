@@ -2,18 +2,22 @@ import { add } from "@/commands/add.js";
 import { build } from "@/commands/build.js";
 import { diff } from "@/commands/diff.js";
 import { doctor } from "@/commands/doctor.js";
+import { info } from "@/commands/info.js";
 import { init } from "@/commands/init.js";
 import { list } from "@/commands/list.js";
 import { initMcpClient, startMcpServer } from "@/commands/mcp.js";
+import { search } from "@/commands/search.js";
 import { validate } from "@/commands/validate.js";
 import {
   parseAddArgs,
   parseBuildArgs,
   parseDiffArgs,
   parseDoctorArgs,
+  parseInfoArgs,
   parseInitArgs,
   parseListArgs,
   parseMcpArgs,
+  parseSearchArgs,
   parseValidateArgs,
   resolveCwd,
 } from "@/utils/args.js";
@@ -35,6 +39,10 @@ function printHelp(): void {
   );
   console.log("  add [components...]   Add components to your project");
   console.log("  list                  List available components");
+  console.log("  search [query]        Search components by keyword or type");
+  console.log(
+    "  info <component>      Display component metadata and dependencies"
+  );
   console.log(
     "  diff <components...>  Compare installed components against the registry"
   );
@@ -139,6 +147,32 @@ async function runAdd(): Promise<void> {
 async function runList(): Promise<void> {
   const parsed = parseListArgs(args.slice(1));
   await list({ json: parsed.json, registry: parsed.registry });
+}
+
+async function runSearch(): Promise<void> {
+  const parsed = parseSearchArgs(args.slice(1));
+  const ok = await search({
+    json: parsed.json,
+    limit: parsed.limit,
+    query: parsed.query,
+    registry: parsed.registry,
+    type: parsed.type,
+  });
+  if (!ok) {
+    process.exitCode = 1;
+  }
+}
+
+async function runInfo(): Promise<void> {
+  const parsed = parseInfoArgs(args.slice(1));
+  const ok = await info({
+    component: parsed.component,
+    json: parsed.json,
+    registry: parsed.registry,
+  });
+  if (!ok) {
+    process.exitCode = 1;
+  }
 }
 
 async function runDiff(): Promise<void> {
@@ -279,6 +313,16 @@ async function runCommand(): Promise<void> {
 
   if (command === "list" || command === "ls") {
     await runList();
+    return;
+  }
+
+  if (command === "search" || command === "find") {
+    await runSearch();
+    return;
+  }
+
+  if (command === "info" || command === "show") {
+    await runInfo();
     return;
   }
 

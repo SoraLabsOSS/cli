@@ -1,6 +1,6 @@
 # @soralabs/cli
 
-[![Socket Badge](https://badge.socket.dev/npm/package/@soralabs/cli/0.5.6)](https://socket.dev/npm/package/@soralabs/cli/overview/0.5.6)
+[![Socket Badge](https://badge.socket.dev/npm/package/@soralabs/cli/0.5.7)](https://socket.dev/npm/package/@soralabs/cli/overview/0.5.7)
 
 A CLI for installing components from any [shadcn](https://ui.shadcn.com)-compatible registry into your project — defaults to [Sora UI](https://ui.soralabs.studio) and other Sora Labs products, but works against any registry via `--registry <url>`. Includes native registry authoring tools and Model Context Protocol (MCP) support for AI coding assistants.
 
@@ -38,6 +38,13 @@ npx @soralabs/cli add
 
 # List available components
 npx @soralabs/cli list
+
+# Search components by keyword or type
+npx @soralabs/cli search text
+npx @soralabs/cli search --type hook
+
+# Inspect component metadata and dependencies
+npx @soralabs/cli info text-effect
 
 # Compare installed components against the registry
 npx @soralabs/cli diff text-effect
@@ -90,7 +97,7 @@ In a monorepo, `--cwd <path>` (or `-c`) runs commands as if started inside `<pat
 bun install
 bun run build      # bundles src/index.ts -> dist/index.js via tsup
 bun run typecheck
-bun test           # run test suite (368+ unit tests)
+bun test           # run test suite (379+ unit tests)
 bun x ultracite check
 node dist/index.js list
 ```

@@ -32,6 +32,8 @@
           "commands/init",
           "commands/add",
           "commands/list",
+          "commands/search",
+          "commands/info",
           "commands/diff",
           "commands/doctor",
           "commands/build",
