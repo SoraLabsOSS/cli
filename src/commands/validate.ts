@@ -1,7 +1,8 @@
 import { existsSync, readFileSync } from "node:fs";
-import { dirname, isAbsolute, resolve, sep } from "node:path";
+import { dirname, isAbsolute, resolve } from "node:path";
 import type { RegistryItem } from "@/types.js";
 import { bar, done, error, sanitize, warn } from "@/utils/colors.js";
+import { isPathInside } from "@/utils/fs.js";
 
 export interface ValidationError {
   item?: string;
@@ -25,12 +26,6 @@ export interface ValidateOptions {
 
 const VALID_NAME_PATTERN = /^[a-z0-9][a-z0-9._/-]*$/;
 const UNSAFE_DEP_CHARS = /[^a-zA-Z0-9@/._-]/;
-
-function isPathInside(childPath: string, parentDir: string): boolean {
-  const rel = resolve(childPath);
-  const root = resolve(parentDir);
-  return rel === root || rel.startsWith(root + sep);
-}
 
 function parseRegistryFile(
   registryFile: string,

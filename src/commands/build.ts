@@ -1,19 +1,14 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname, isAbsolute, join, resolve, sep } from "node:path";
+import { dirname, isAbsolute, join, resolve } from "node:path";
 import type { RegistryFile, RegistryItem } from "@/types.js";
 import { done, error, sanitize } from "@/utils/colors.js";
+import { isPathInside } from "@/utils/fs.js";
 import { spinner } from "@/utils/spinner.js";
 import { validate } from "./validate.js";
 
 export interface BuildOptions {
   cwd?: string;
   output?: string;
-}
-
-function isPathInside(childPath: string, parentDir: string): boolean {
-  const rel = resolve(childPath);
-  const root = resolve(parentDir);
-  return rel === root || rel.startsWith(root + sep);
 }
 
 /**

@@ -1,23 +1,22 @@
 import { existsSync, statSync } from "node:fs";
 import { resolve } from "node:path";
-import { parseArgs } from "node:util";
+import { type ParseArgsConfig, parseArgs } from "node:util";
 import { error } from "@/utils/colors.js";
 
+/** Shared wrapper — every command uses allowPositionals + strict:false. */
+const pa = (argv: string[], options: ParseArgsConfig["options"]) =>
+  parseArgs({ allowPositionals: true, args: argv, options, strict: false });
+
 export function parseAddArgs(argv: string[]) {
-  const { values, positionals } = parseArgs({
-    allowPositionals: true,
-    args: argv,
-    options: {
-      cwd: { short: "c", type: "string" },
-      "dry-run": { default: false, type: "boolean" },
-      force: { default: false, short: "f", type: "boolean" },
-      path: { type: "string" },
-      registry: { type: "string" },
-      silent: { default: false, short: "s", type: "boolean" },
-      view: { default: false, type: "boolean" },
-      yes: { default: false, short: "y", type: "boolean" },
-    },
-    strict: false,
+  const { values, positionals } = pa(argv, {
+    cwd: { short: "c", type: "string" },
+    "dry-run": { default: false, type: "boolean" },
+    force: { default: false, short: "f", type: "boolean" },
+    path: { type: "string" },
+    registry: { type: "string" },
+    silent: { default: false, short: "s", type: "boolean" },
+    view: { default: false, type: "boolean" },
+    yes: { default: false, short: "y", type: "boolean" },
   });
   return {
     _: positionals,
@@ -33,14 +32,9 @@ export function parseAddArgs(argv: string[]) {
 }
 
 export function parseListArgs(argv: string[]) {
-  const { values, positionals } = parseArgs({
-    allowPositionals: true,
-    args: argv,
-    options: {
-      json: { default: false, type: "boolean" },
-      registry: { type: "string" },
-    },
-    strict: false,
+  const { values, positionals } = pa(argv, {
+    json: { default: false, type: "boolean" },
+    registry: { type: "string" },
   });
   return {
     _: positionals,
@@ -50,17 +44,12 @@ export function parseListArgs(argv: string[]) {
 }
 
 export function parseSearchArgs(argv: string[]) {
-  const { values, positionals } = parseArgs({
-    allowPositionals: true,
-    args: argv,
-    options: {
-      json: { default: false, type: "boolean" },
-      limit: { short: "l", type: "string" },
-      query: { short: "q", type: "string" },
-      registry: { type: "string" },
-      type: { short: "t", type: "string" },
-    },
-    strict: false,
+  const { values, positionals } = pa(argv, {
+    json: { default: false, type: "boolean" },
+    limit: { short: "l", type: "string" },
+    query: { short: "q", type: "string" },
+    registry: { type: "string" },
+    type: { short: "t", type: "string" },
   });
   const limitNum = values.limit
     ? Number.parseInt(values.limit as string, 10)
@@ -78,14 +67,9 @@ export function parseSearchArgs(argv: string[]) {
 }
 
 export function parseInfoArgs(argv: string[]) {
-  const { values, positionals } = parseArgs({
-    allowPositionals: true,
-    args: argv,
-    options: {
-      json: { default: false, type: "boolean" },
-      registry: { type: "string" },
-    },
-    strict: false,
+  const { values, positionals } = pa(argv, {
+    json: { default: false, type: "boolean" },
+    registry: { type: "string" },
   });
   return {
     _: positionals,
@@ -96,15 +80,10 @@ export function parseInfoArgs(argv: string[]) {
 }
 
 export function parseDiffArgs(argv: string[]) {
-  const { values, positionals } = parseArgs({
-    allowPositionals: true,
-    args: argv,
-    options: {
-      cwd: { short: "c", type: "string" },
-      path: { type: "string" },
-      registry: { type: "string" },
-    },
-    strict: false,
+  const { values, positionals } = pa(argv, {
+    cwd: { short: "c", type: "string" },
+    path: { type: "string" },
+    registry: { type: "string" },
   });
   return {
     _: positionals,
@@ -115,15 +94,10 @@ export function parseDiffArgs(argv: string[]) {
 }
 
 export function parseDoctorArgs(argv: string[]) {
-  const { values, positionals } = parseArgs({
-    allowPositionals: true,
-    args: argv,
-    options: {
-      cwd: { short: "c", type: "string" },
-      json: { default: false, type: "boolean" },
-      registry: { type: "string" },
-    },
-    strict: false,
+  const { values, positionals } = pa(argv, {
+    cwd: { short: "c", type: "string" },
+    json: { default: false, type: "boolean" },
+    registry: { type: "string" },
   });
   return {
     _: positionals,
@@ -134,16 +108,11 @@ export function parseDoctorArgs(argv: string[]) {
 }
 
 export function parseInitArgs(argv: string[]) {
-  const { values, positionals } = parseArgs({
-    allowPositionals: true,
-    args: argv,
-    options: {
-      cwd: { short: "c", type: "string" },
-      defaults: { default: false, short: "d", type: "boolean" },
-      force: { default: false, short: "f", type: "boolean" },
-      yes: { default: false, short: "y", type: "boolean" },
-    },
-    strict: false,
+  const { values, positionals } = pa(argv, {
+    cwd: { short: "c", type: "string" },
+    defaults: { default: false, short: "d", type: "boolean" },
+    force: { default: false, short: "f", type: "boolean" },
+    yes: { default: false, short: "y", type: "boolean" },
   });
   return {
     _: positionals,
@@ -155,14 +124,9 @@ export function parseInitArgs(argv: string[]) {
 }
 
 export function parseBuildArgs(argv: string[]) {
-  const { values, positionals } = parseArgs({
-    allowPositionals: true,
-    args: argv,
-    options: {
-      cwd: { short: "c", type: "string" },
-      output: { short: "o", type: "string" },
-    },
-    strict: false,
+  const { values, positionals } = pa(argv, {
+    cwd: { short: "c", type: "string" },
+    output: { short: "o", type: "string" },
   });
   return {
     _: positionals,
@@ -172,14 +136,9 @@ export function parseBuildArgs(argv: string[]) {
 }
 
 export function parseValidateArgs(argv: string[]) {
-  const { values, positionals } = parseArgs({
-    allowPositionals: true,
-    args: argv,
-    options: {
-      cwd: { short: "c", type: "string" },
-      json: { default: false, type: "boolean" },
-    },
-    strict: false,
+  const { values, positionals } = pa(argv, {
+    cwd: { short: "c", type: "string" },
+    json: { default: false, type: "boolean" },
   });
   return {
     _: positionals,
@@ -189,14 +148,9 @@ export function parseValidateArgs(argv: string[]) {
 }
 
 export function parseMcpArgs(argv: string[]) {
-  const { values, positionals } = parseArgs({
-    allowPositionals: true,
-    args: argv,
-    options: {
-      client: { type: "string" },
-      cwd: { short: "c", type: "string" },
-    },
-    strict: false,
+  const { values, positionals } = pa(argv, {
+    client: { type: "string" },
+    cwd: { short: "c", type: "string" },
   });
   return {
     _: positionals,

@@ -120,246 +120,152 @@ function printHelp(): void {
   );
 }
 
-async function runAdd(): Promise<void> {
-  const parsed = parseAddArgs(args.slice(1));
-  const cwd = resolveCwd(parsed.cwd);
-  if (cwd === null) {
-    process.exitCode = 1;
-    return;
-  }
-  const componentArgs = parsed._.map(String);
-
-  const ok = await add(componentArgs, {
-    cwd,
-    dryRun: parsed["dry-run"],
-    force: parsed.force,
-    path: parsed.path,
-    registry: parsed.registry,
-    silent: parsed.silent,
-    view: parsed.view,
-    yes: parsed.yes,
-  });
+const fail = (ok: boolean) => {
   if (!ok) {
     process.exitCode = 1;
   }
+};
+
+/** Resolves cwd and sets exitCode=1 + returns null on failure. */
+function cwd(parsed: { cwd?: string }): string | null {
+  const resolved = resolveCwd(parsed.cwd);
+  if (resolved === null) {
+    process.exitCode = 1;
+  }
+  return resolved;
 }
 
-async function runList(): Promise<void> {
-  const parsed = parseListArgs(args.slice(1));
-  await list({ json: parsed.json, registry: parsed.registry });
-}
-
-async function runSearch(): Promise<void> {
-  const parsed = parseSearchArgs(args.slice(1));
-  const ok = await search({
-    json: parsed.json,
-    limit: parsed.limit,
-    query: parsed.query,
-    registry: parsed.registry,
-    type: parsed.type,
-  });
-  if (!ok) {
-    process.exitCode = 1;
-  }
-}
-
-async function runInfo(): Promise<void> {
-  const parsed = parseInfoArgs(args.slice(1));
-  const ok = await info({
-    component: parsed.component,
-    json: parsed.json,
-    registry: parsed.registry,
-  });
-  if (!ok) {
-    process.exitCode = 1;
-  }
-}
-
-async function runDiff(): Promise<void> {
-  const parsed = parseDiffArgs(args.slice(1));
-  const cwd = resolveCwd(parsed.cwd);
-  if (cwd === null) {
-    process.exitCode = 1;
-    return;
-  }
-  const componentArgs = parsed._.map(String);
-
-  const ok = await diff(componentArgs, {
-    cwd,
-    path: parsed.path,
-    registry: parsed.registry,
-  });
-  if (!ok) {
-    process.exitCode = 1;
-  }
-}
-
-async function runDoctor(): Promise<void> {
-  const parsed = parseDoctorArgs(args.slice(1));
-  const cwd = resolveCwd(parsed.cwd);
-  if (cwd === null) {
-    process.exitCode = 1;
-    return;
-  }
-
-  const ok = await doctor(__VERSION__, {
-    cwd,
-    json: parsed.json,
-    registry: parsed.registry,
-  });
-  if (!ok) {
-    process.exitCode = 1;
-  }
-}
-
-async function runInit(): Promise<void> {
-  const parsed = parseInitArgs(args.slice(1));
-  const cwd = resolveCwd(parsed.cwd);
-  if (cwd === null) {
-    process.exitCode = 1;
-    return;
-  }
-
-  const ok = await init({
-    cwd,
-    defaults: parsed.defaults,
-    force: parsed.force,
-    yes: parsed.yes,
-  });
-  if (!ok) {
-    process.exitCode = 1;
-  }
-}
-
-function runBuild(argv: string[]): void {
-  const parsed = parseBuildArgs(argv);
-  const cwd = resolveCwd(parsed.cwd);
-  if (cwd === null) {
-    process.exitCode = 1;
-    return;
-  }
-
-  const [registryFile] = parsed._.map(String);
-  const ok = build(registryFile, {
-    cwd,
-    output: parsed.output,
-  });
-  if (!ok) {
-    process.exitCode = 1;
-  }
-}
-
-function runValidate(argv: string[]): void {
-  const parsed = parseValidateArgs(argv);
-  const cwd = resolveCwd(parsed.cwd);
-  if (cwd === null) {
-    process.exitCode = 1;
-    return;
-  }
-
-  const [registryFile] = parsed._.map(String);
-  const ok = validate(registryFile, {
-    cwd,
-    json: parsed.json,
-  });
-  if (!ok) {
-    process.exitCode = 1;
-  }
-}
-
-async function runMcp(): Promise<void> {
-  const [, sub] = args;
-  if (sub === "init") {
-    const parsed = parseMcpArgs(args.slice(2));
-    const cwd = resolveCwd(parsed.cwd);
-    if (cwd === null) {
-      process.exitCode = 1;
+const COMMANDS = {
+  add: async () => {
+    const p = parseAddArgs(args.slice(1));
+    const dir = cwd(p);
+    if (!dir) {
       return;
     }
-    const ok = await initMcpClient({ client: parsed.client, cwd });
-    if (!ok) {
-      process.exitCode = 1;
+    fail(
+      await add(p._, {
+        cwd: dir,
+        dryRun: p["dry-run"],
+        force: p.force,
+        path: p.path,
+        registry: p.registry,
+        silent: p.silent,
+        view: p.view,
+        yes: p.yes,
+      })
+    );
+  },
+  build: (argv = args.slice(1)) => {
+    const p = parseBuildArgs(argv);
+    const dir = cwd(p);
+    if (!dir) {
+      return;
     }
-    return;
-  }
-  await startMcpServer();
-}
+    fail(build(p._[0], { cwd: dir, output: p.output }));
+  },
+  diff: async () => {
+    const p = parseDiffArgs(args.slice(1));
+    const dir = cwd(p);
+    if (!dir) {
+      return;
+    }
+    fail(
+      await diff(p._, {
+        cwd: dir,
+        path: p.path,
+        registry: p.registry,
+      })
+    );
+  },
+  doctor: async () => {
+    const p = parseDoctorArgs(args.slice(1));
+    const dir = cwd(p);
+    if (!dir) {
+      return;
+    }
+    fail(
+      await doctor(__VERSION__, {
+        cwd: dir,
+        json: p.json,
+        registry: p.registry,
+      })
+    );
+  },
+  info: async () => {
+    const p = parseInfoArgs(args.slice(1));
+    fail(
+      await info({ component: p.component, json: p.json, registry: p.registry })
+    );
+  },
+  init: async () => {
+    const p = parseInitArgs(args.slice(1));
+    const dir = cwd(p);
+    if (!dir) {
+      return;
+    }
+    fail(
+      await init({ cwd: dir, defaults: p.defaults, force: p.force, yes: p.yes })
+    );
+  },
+  list: async () => {
+    const p = parseListArgs(args.slice(1));
+    await list({ json: p.json, registry: p.registry });
+  },
+  mcp: async () => {
+    const [, sub] = args;
+    if (sub === "init") {
+      const p = parseMcpArgs(args.slice(2));
+      const dir = cwd(p);
+      if (!dir) {
+        return;
+      }
+      fail(await initMcpClient({ client: p.client, cwd: dir }));
+      return;
+    }
+    await startMcpServer();
+  },
+  registry: () => {
+    const [, sub] = args;
+    if (sub === "build") {
+      return COMMANDS.build(args.slice(2));
+    }
+    if (sub === "validate") {
+      return COMMANDS.validate(args.slice(2));
+    }
+    error(`Unknown registry command: ${sub ?? ""}`);
+    printHelp();
+    process.exit(1);
+  },
+  search: async () => {
+    const p = parseSearchArgs(args.slice(1));
+    fail(
+      await search({
+        json: p.json,
+        limit: p.limit,
+        query: p.query,
+        registry: p.registry,
+        type: p.type,
+      })
+    );
+  },
+  validate: (argv = args.slice(1)) => {
+    const p = parseValidateArgs(argv);
+    const dir = cwd(p);
+    if (!dir) {
+      return;
+    }
+    fail(validate(p._[0], { cwd: dir, json: p.json }));
+  },
+};
 
-function runRegistry(): void {
-  const [, sub] = args;
-  if (sub === "build") {
-    runBuild(args.slice(2));
-    return;
-  }
-  if (sub === "validate") {
-    runValidate(args.slice(2));
-    return;
-  }
-  error(`Unknown registry command: ${sub ?? ""}`);
-  printHelp();
-  process.exit(1);
-}
+type CommandHandler = (argv?: string[]) => void | Promise<void>;
 
-async function runCommand(): Promise<void> {
-  if (command === "init") {
-    await runInit();
-    return;
-  }
-
-  if (command === "add") {
-    await runAdd();
-    return;
-  }
-
-  if (command === "list" || command === "ls") {
-    await runList();
-    return;
-  }
-
-  if (command === "search" || command === "find") {
-    await runSearch();
-    return;
-  }
-
-  if (command === "info" || command === "show") {
-    await runInfo();
-    return;
-  }
-
-  if (command === "diff") {
-    await runDiff();
-    return;
-  }
-
-  if (command === "doctor") {
-    await runDoctor();
-    return;
-  }
-
-  if (command === "build") {
-    runBuild(args.slice(1));
-    return;
-  }
-
-  if (command === "validate") {
-    runValidate(args.slice(1));
-    return;
-  }
-
-  if (command === "mcp") {
-    await runMcp();
-    return;
-  }
-
-  if (command === "registry") {
-    runRegistry();
-    return;
-  }
-
-  error(`Unknown command: ${command}`);
-  printHelp();
-  process.exit(1);
-}
+const COMMAND_MAP: Record<string, CommandHandler | undefined> = {
+  ...COMMANDS,
+  find: COMMANDS.search,
+  ls: COMMANDS.list,
+  show: COMMANDS.info,
+};
 
 async function main(): Promise<void> {
   try {
@@ -373,6 +279,15 @@ async function main(): Promise<void> {
       return;
     }
 
+    const handler = Object.hasOwn(COMMAND_MAP, command)
+      ? COMMAND_MAP[command]
+      : undefined;
+    if (!handler) {
+      error(`Unknown command: ${command}`);
+      printHelp();
+      process.exit(1);
+    }
+
     // Kicked off in parallel with the command itself so it never adds
     // latency; only checked (with its own short timeout) once the
     // command's own work is done. Doctor reports the CLI version as one
@@ -383,7 +298,7 @@ async function main(): Promise<void> {
         ? Promise.resolve(null)
         : startUpdateCheck(__VERSION__);
     try {
-      await runCommand();
+      await handler();
     } finally {
       const latest = await updateCheck;
       if (latest) {
