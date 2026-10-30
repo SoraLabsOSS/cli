@@ -32,75 +32,163 @@ footer a:has(> img) img,
   border-radius: var(--g-radius-lg, 12px);
 }
 
-/* Mintlify's "Suggest edits" / "Raise issue" toolbar */
+/* Mintlify's feedback toolbar: "Was this page helpful?" (Yes/No) + "Suggest edits" + "Raise issue" */
 #content-area #content:has(+ .feedback-toolbar) {
   margin-bottom: 16px;
 }
+
+.feedback-toolbar button#feedback-thumbs-up,
+.feedback-toolbar button#feedback-thumbs-down,
+#feedback-thumbs-up,
+#feedback-thumbs-down,
 #content-area .feedback-toolbar a[href*="/edit/"],
-#content-area .feedback-toolbar a[href*="/issues/new"] {
+#content-area .feedback-toolbar a[href*="/issues/new"],
+.feedback-toolbar a[href*="/edit/"],
+.feedback-toolbar a[href*="/issues/new"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
   min-height: 40px;
-  padding: 4px 12px;
-  gap: 4px;
+  padding: 0 14px;
+  gap: 8px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   background: #ffffff;
   color: #64748b;
-  transition: border-color 150ms ease, background-color 150ms ease, color 150ms ease;
+  cursor: pointer;
+  white-space: nowrap;
+  box-sizing: border-box;
+  text-decoration: none !important;
+  transition: border-color 150ms ease, background-color 150ms ease, color 150ms ease, box-shadow 150ms ease;
 }
+
+.feedback-toolbar button#feedback-thumbs-up small,
+.feedback-toolbar button#feedback-thumbs-down small,
+#feedback-thumbs-up small,
+#feedback-thumbs-down small,
+#content-area .feedback-toolbar a[href*="/edit/"] small,
+#content-area .feedback-toolbar a[href*="/issues/new"] small,
+.feedback-toolbar a[href*="/edit/"] small,
+.feedback-toolbar a[href*="/issues/new"] small {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1;
+  color: inherit;
+}
+
+.feedback-toolbar button#feedback-thumbs-up svg,
+.feedback-toolbar button#feedback-thumbs-down svg,
+#feedback-thumbs-up svg,
+#feedback-thumbs-down svg,
+#content-area .feedback-toolbar a[href*="/edit/"] svg,
+#content-area .feedback-toolbar a[href*="/issues/new"] svg,
+.feedback-toolbar a[href*="/edit/"] svg,
+.feedback-toolbar a[href*="/issues/new"] svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: currentColor;
+}
+
+.feedback-toolbar button#feedback-thumbs-up:hover,
+.feedback-toolbar button#feedback-thumbs-down:hover,
+#feedback-thumbs-up:hover,
+#feedback-thumbs-down:hover,
 #content-area .feedback-toolbar a[href*="/edit/"]:hover,
-#content-area .feedback-toolbar a[href*="/issues/new"]:hover {
+#content-area .feedback-toolbar a[href*="/issues/new"]:hover,
+.feedback-toolbar a[href*="/edit/"]:hover,
+.feedback-toolbar a[href*="/issues/new"]:hover {
   border-color: #cbd5e1;
   background: #f8fafc;
   color: #0f172a;
 }
-#content-area .feedback-toolbar a[href*="/edit/"]:focus-visible,
-#content-area .feedback-toolbar a[href*="/issues/new"]:focus-visible {
-  outline: 2px solid #00A6F4;
-  outline-offset: 4px;
-}
 
-/* Built-in page feedback: blue brand aligned */
-#feedback-thumbs-up,
-#feedback-thumbs-down {
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  background: transparent;
-  color: #64748b;
-  transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease;
-}
-#feedback-thumbs-up:hover,
-#feedback-thumbs-down:hover {
-  border-color: #7dd3fc;
-  background: #f0f9ff;
-  color: #0369a1;
-}
+.feedback-toolbar button#feedback-thumbs-up:focus-visible,
+.feedback-toolbar button#feedback-thumbs-down:focus-visible,
 #feedback-thumbs-up:focus-visible,
-#feedback-thumbs-down:focus-visible {
+#feedback-thumbs-down:focus-visible,
+#content-area .feedback-toolbar a[href*="/edit/"]:focus-visible,
+#content-area .feedback-toolbar a[href*="/issues/new"]:focus-visible,
+.feedback-toolbar a[href*="/edit/"]:focus-visible,
+.feedback-toolbar a[href*="/issues/new"]:focus-visible {
   outline: 2px solid #00A6F4;
   outline-offset: 2px;
 }
+
+/* Active / clicked feedback state */
+.feedback-toolbar button#feedback-thumbs-up[aria-pressed="true"],
+.feedback-toolbar button#feedback-thumbs-down[aria-pressed="true"],
+.feedback-toolbar button#feedback-thumbs-up[data-state="active"],
+.feedback-toolbar button#feedback-thumbs-down[data-state="active"],
+.feedback-toolbar button#feedback-thumbs-up[data-active="true"],
+.feedback-toolbar button#feedback-thumbs-down[data-active="true"] {
+  border-color: #00A6F4;
+  background: #f0f9ff;
+  color: #0284c7;
+}
+
+/* Dark mode for all feedback toolbar buttons and links */
+:is(html.dark, .dark) .feedback-toolbar button#feedback-thumbs-up,
+:is(html.dark, .dark) .feedback-toolbar button#feedback-thumbs-down,
+:is(html.dark, .dark) #feedback-thumbs-up,
+:is(html.dark, .dark) #feedback-thumbs-down,
+:is(html.dark, .dark) #content-area .feedback-toolbar a[href*="/edit/"],
+:is(html.dark, .dark) #content-area .feedback-toolbar a[href*="/issues/new"],
+:is(html.dark, .dark) .feedback-toolbar a[href*="/edit/"],
+:is(html.dark, .dark) .feedback-toolbar a[href*="/issues/new"] {
+  border-color: #262626;
+  background: #141515;
+  color: #a3a3a3;
+}
+
+:is(html.dark, .dark) .feedback-toolbar button#feedback-thumbs-up:hover,
+:is(html.dark, .dark) .feedback-toolbar button#feedback-thumbs-down:hover,
+:is(html.dark, .dark) #feedback-thumbs-up:hover,
+:is(html.dark, .dark) #feedback-thumbs-down:hover,
+:is(html.dark, .dark) #content-area .feedback-toolbar a[href*="/edit/"]:hover,
+:is(html.dark, .dark) #content-area .feedback-toolbar a[href*="/issues/new"]:hover,
+:is(html.dark, .dark) .feedback-toolbar a[href*="/edit/"]:hover,
+:is(html.dark, .dark) .feedback-toolbar a[href*="/issues/new"]:hover {
+  border-color: #404040;
+  background: #1c1d1e;
+  color: #ededed;
+}
+
+:is(html.dark, .dark) .feedback-toolbar button#feedback-thumbs-up:focus-visible,
+:is(html.dark, .dark) .feedback-toolbar button#feedback-thumbs-down:focus-visible,
+:is(html.dark, .dark) #feedback-thumbs-up:focus-visible,
+:is(html.dark, .dark) #feedback-thumbs-down:focus-visible,
+:is(html.dark, .dark) #content-area .feedback-toolbar a[href*="/edit/"]:focus-visible,
+:is(html.dark, .dark) #content-area .feedback-toolbar a[href*="/issues/new"]:focus-visible,
+:is(html.dark, .dark) .feedback-toolbar a[href*="/edit/"]:focus-visible,
+:is(html.dark, .dark) .feedback-toolbar a[href*="/issues/new"]:focus-visible {
+  outline-color: #38bdf8;
+}
+
+:is(html.dark, .dark) .feedback-toolbar button#feedback-thumbs-up[aria-pressed="true"],
+:is(html.dark, .dark) .feedback-toolbar button#feedback-thumbs-down[aria-pressed="true"],
+:is(html.dark, .dark) .feedback-toolbar button#feedback-thumbs-up[data-state="active"],
+:is(html.dark, .dark) .feedback-toolbar button#feedback-thumbs-down[data-state="active"],
+:is(html.dark, .dark) .feedback-toolbar button#feedback-thumbs-up[data-active="true"],
+:is(html.dark, .dark) .feedback-toolbar button#feedback-thumbs-down[data-active="true"] {
+  border-color: #38bdf8;
+  background: #082f49;
+  color: #38bdf8;
+}
+
+/* Built-in page feedback form dropdown / dialog */
 #feedback-form {
   border: 1px solid #e2e8f0;
   border-radius: 12px;
   background: #ffffff;
   color: #0f172a;
 }
-:is(.dark) #feedback-thumbs-up,
-:is(.dark) #feedback-thumbs-down {
-  border-color: #262626;
-  color: #a3a3a3;
-}
-:is(.dark) #feedback-thumbs-up:hover,
-:is(.dark) #feedback-thumbs-down:hover {
-  border-color: #38bdf8;
-  background: #082f49;
-  color: #38bdf8;
-}
-:is(.dark) #feedback-thumbs-up:focus-visible,
-:is(.dark) #feedback-thumbs-down:focus-visible {
-  outline-color: #38bdf8;
-}
-:is(.dark) #feedback-form {
+:is(html.dark, .dark) #feedback-form {
   border-color: #262626;
   background: #141515;
   color: #ededed;
