@@ -1,0 +1,58 @@
+---
+title: "Agent Playbook"
+description: "Instructions for AI coding agents (Cursor, Claude Code, Antigravity, Windsurf) using Sora CLI and MCP"
+---
+
+This document gives AI coding agents instructions on how to search, inspect, and install animated UI components and registries using Sora CLI.
+
+## MCP Server Connection
+
+To connect Sora CLI's Model Context Protocol (MCP) server:
+
+```bash
+npx @soralabs/cli mcp init
+```
+
+Or manually add to your assistant's MCP configuration:
+
+```json
+{
+  "mcpServers": {
+    "sora": {
+      "command": "npx",
+      "args": ["-y", "@soralabs/cli", "mcp"]
+    }
+  }
+}
+```
+
+## Available MCP Tools
+
+When the server is active, you have access to:
+
+1. `sora_search`: Search components by name, keyword, or registry.
+2. `sora_info`: Fetch detailed component manifest, dependencies, registry files, and peer requirements.
+3. `sora_add`: Install components into the current workspace with optional flags (`--yes`, `--dry-run`, `--cwd`).
+4. `sora_list`: List all available components from the active registry.
+
+## Recommended Agent Workflow
+
+1. **Check project environment**:
+   Verify if the project uses Next.js, Vite, Astro, or a monorepo. Sora CLI will automatically detect tsconfig paths, icon libraries, and Tailwind version (v3 or v4).
+
+2. **Search for components**:
+   ```bash
+   npx @soralabs/cli search <keyword>
+   ```
+
+3. **Install without blocking prompts**:
+   Always pass `--yes` when running from an autonomous agent terminal:
+   ```bash
+   npx @soralabs/cli add <component-name> --yes
+   ```
+
+4. **Monorepo workspaces**:
+   Use `--cwd <path>` to target a specific package:
+   ```bash
+   npx @soralabs/cli add <component-name> --cwd packages/ui --yes
+   ```

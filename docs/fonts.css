@@ -1,0 +1,94 @@
+/* Self-hosted fonts (latin subset, variable weight). font-display: swap
+   shows fallback text straight away and swaps when the file arrives. */
+@font-face {
+  font-family: "Poppins";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("/fonts/poppins-500-latin.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Poppins";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/poppins-600-latin.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Poppins";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/poppins-700-latin.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Geist Mono";
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url("/fonts/geist-mono-latin.woff2") format("woff2");
+}
+
+/* Geist body text. Static, hinted cuts from Vercel's geist package, latin subset. */
+@font-face {
+  font-family: "Geist";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("/fonts/geist-medium-latin.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Geist";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/geist-semibold-latin.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Geist";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/geist-bold-latin.woff2") format("woff2");
+}
+
+/* Code uses Geist Mono, matching Geist body text. */
+code,
+pre,
+kbd,
+samp {
+  font-family: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/* Headings use Poppins. Set here as well as in docs.json so the page
+   title (outside #content-area) and card titles pick it up. */
+#page-title,
+#content-area h1,
+#content-area h2,
+#content-area h3,
+#content-area h4 {
+  font-family: "Poppins", var(--font-family-headings-custom, "Geist"), system-ui, sans-serif;
+}
+
+/* Negative tracking and balanced line-height for large headings */
+#page-title,
+#content-area h1,
+#content-area h2 {
+  letter-spacing: -0.015em;
+  line-height: 1.25;
+}
+
+#content-area h3,
+#content-area h4 {
+  letter-spacing: -0.005em;
+  line-height: 1.35;
+}
+
+#page-title {
+  overflow-wrap: break-word;
+}

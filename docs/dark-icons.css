@@ -1,0 +1,18 @@
+/* Logos and icons that are black on transparent and vanish on the dark page. */
+
+/* Footer socials */
+html.dark body #footer a[href*="x.com"] svg,
+html.dark body #footer a[href*="github.com"] svg {
+  background-color: #ededed !important;
+}
+
+/* Monochrome black brand marks: render white in dark mode */
+html.dark img[src$="/jetbrains.svg"],
+html.dark img[src$="/openai.svg"],
+html.dark img[src$="/vercel.svg"],
+html.dark img[src$="/windsurf.svg"],
+html.dark img[src$="/cline.svg"],
+html.dark img[src$="/codex.svg"],
+html.dark img[src*="github.com"] {
+  filter: invert(1);
+}

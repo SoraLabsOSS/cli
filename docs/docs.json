@@ -7,63 +7,112 @@
     "light": "#38BDF8",
     "dark": "#0284C7"
   },
-  "background": {
-    "color": {
-      "light": "#ffffff",
-      "dark": "#080808"
-    }
-  },
   "favicon": {
     "light": "/favicon.svg",
     "dark": "/favicon-dark.svg"
   },
   "navigation": {
-    "pages": [
+    "tabs": [
       {
-        "group": "Getting Started",
-        "pages": [
-          "index",
-          "quickstart"
+        "tab": "Get Started",
+        "groups": [
+          {
+            "group": "Overview",
+            "icon": "rocket",
+            "pages": [
+              "index",
+              "quickstart"
+            ]
+          },
+          {
+            "group": "For AI Agents",
+            "icon": "bot",
+            "pages": [
+              "for-agents"
+            ]
+          }
         ]
       },
       {
-        "group": "Commands",
-        "pages": [
-          "commands/init",
-          "commands/add",
-          "commands/list",
-          "commands/search",
-          "commands/info",
-          "commands/diff",
-          "commands/doctor",
-          "commands/build",
-          "commands/validate",
-          "commands/mcp"
+        "tab": "Commands",
+        "groups": [
+          {
+            "group": "Component Setup",
+            "icon": "download",
+            "pages": [
+              "commands/init",
+              "commands/add",
+              "commands/diff"
+            ]
+          },
+          {
+            "group": "Discovery & Inspection",
+            "icon": "search",
+            "pages": [
+              "commands/list",
+              "commands/search",
+              "commands/info"
+            ]
+          },
+          {
+            "group": "Diagnostics",
+            "icon": "stethoscope",
+            "pages": [
+              "commands/doctor"
+            ]
+          },
+          {
+            "group": "Registry Authoring",
+            "icon": "boxes",
+            "pages": [
+              "commands/build",
+              "commands/validate"
+            ]
+          },
+          {
+            "group": "AI & MCP",
+            "icon": "cpu",
+            "pages": [
+              "commands/mcp"
+            ]
+          }
         ]
       },
       {
-        "group": "Architecture & Guides",
-        "pages": [
-          "guides/universal-addressing",
-          "guides/registries",
-          "guides/monorepos"
+        "tab": "Architecture & Guides",
+        "groups": [
+          {
+            "group": "Registry Architecture",
+            "icon": "network",
+            "pages": [
+              "guides/universal-addressing",
+              "guides/registries"
+            ]
+          },
+          {
+            "group": "Workspaces",
+            "icon": "layers",
+            "pages": [
+              "guides/monorepos"
+            ]
+          }
         ]
       }
     ],
     "global": {
       "anchors": [
         {
-          "anchor": "Sora UI",
+          "anchor": "Sora UI Catalog",
           "href": "https://ui.soralabs.studio",
           "icon": "sparkles"
         },
         {
-          "anchor": "NPM",
+          "anchor": "NPM Package",
           "href": "https://www.npmjs.com/package/@soralabs/cli",
           "icon": "npm"
         },
         {
-          "anchor": "GitHub",
+          "anchor": "GitHub Repo",
           "href": "https://github.com/SoraLabsOSS/cli",
           "icon": "github"
         }
@@ -72,7 +121,8 @@
   },
   "logo": {
     "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
+    "dark": "/logo/dark.svg",
+    "href": "https://cli.soralabs.studio"
   },
   "navbar": {
     "links": [
@@ -95,24 +145,116 @@
       "href": "https://github.com/SoraLabsOSS/cli"
     }
   },
+  "appearance": {
+    "default": "system",
+    "strict": false
+  },
+  "background": {
+    "color": {
+      "light": "#FFFFFF",
+      "dark": "#080808"
+    }
+  },
+  "search": {
+    "prompt": "Search Sora CLI docs..."
+  },
+  "fonts": {
+    "heading": {
+      "family": "Poppins",
+      "source": "/fonts/poppins-600-latin.woff2",
+      "format": "woff2",
+      "weight": 600
+    },
+    "body": {
+      "family": "Geist",
+      "source": "/fonts/geist-regular-latin.woff2",
+      "format": "woff2"
+    }
+  },
+  "icons": {
+    "library": "lucide"
+  },
+  "styling": {
+    "eyebrows": "breadcrumbs"
+  },
   "contextual": {
     "options": [
       "copy",
       "view",
       "chatgpt",
       "claude",
+      "mcp",
       "cursor",
       "vscode"
     ]
   },
   "footer": {
     "socials": {
-      "x": "https://x.com/axyl1410",
-      "github": "https://github.com/SoraLabsOSS/cli",
-      "website": "https://ui.soralabs.studio"
-    }
+      "github": "https://github.com/SoraLabsOSS/cli"
+    },
+    "links": [
+      {
+        "header": "Product",
+        "items": [
+          {
+            "label": "Sora UI",
+            "href": "https://ui.soralabs.studio/docs"
+          },
+          {
+            "label": "Motion",
+            "href": "https://ui.soralabs.studio/motion"
+          },
+          {
+            "label": "Components Catalog",
+            "href": "https://ui.soralabs.studio/catalog"
+          },
+          {
+            "label": "Icons Library",
+            "href": "https://ui.soralabs.studio/icons"
+          }
+        ]
+      },
+      {
+        "header": "Resources",
+        "items": [
+          {
+            "label": "Quickstart",
+            "href": "/quickstart"
+          },
+          {
+            "label": "CLI Reference",
+            "href": "/commands/init"
+          },
+          {
+            "label": "Universal Addressing",
+            "href": "/guides/universal-addressing"
+          },
+          {
+            "label": "GitHub",
+            "href": "https://github.com/SoraLabsOSS/cli"
+          }
+        ]
+      },
+      {
+        "header": "For AI Agents",
+        "items": [
+          {
+            "label": "Agent Playbook",
+            "href": "/for-agents"
+          },
+          {
+            "label": "Model Context Protocol",
+            "href": "/commands/mcp"
+          }
+        ]
+      }
+    ]
   },
-  "seo": {
-    "indexing": "all"
+  "markdown": {
+    "instructions": [
+      "Sora CLI (@soralabs/cli) is the universal CLI for installing shadcn-compatible components and registries.",
+      "Use only commands and flags shown in these docs. Do not invent one.",
+      "Agent setup and MCP playbook: https://cli.soralabs.studio/for-agents.md."
+    ]
   }
 }

@@ -1,36 +1,189 @@
 ---
-title: "Introduction"
-description: "The universal CLI for installing motion-first components from any shadcn-compatible registry"
+title: "Sora CLI: The universal component CLI & MCP server"
+description: "Install motion-first components from any shadcn-compatible registry with zero configuration, auto icon conversion, Tailwind v4 support, and native AI MCP integration."
+sidebarTitle: "Overview"
+mode: "custom"
+hideFooterPagination: true
 ---
 
-<img src="/assets/sora-ui.png" alt="Sora UI & CLI Banner" className="w-full rounded-xl border border-neutral-200 dark:border-neutral-800 my-4" />
+import { HeroInstall, PromptBlock } from '/snippets/hero-install.jsx';
 
-**`@soralabs/cli`** is a standalone, clean CLI tool for installing components from any [shadcn](https://ui.shadcn.com)-compatible registry into your project, building your own component registries, and connecting directly with AI assistants.
+<section aria-labelledby="hero-title" className="not-prose mx-auto grid w-full max-w-6xl items-center gap-10 px-5 text-left text-[#082f49] dark:text-[#ededed] md:px-8 sora-hero-grid" style={{ paddingTop: "clamp(36px, 5vw, 64px)", paddingBottom: 32 }}>
+  <div>
+    <h1 id="hero-title" className="m-0 text-3xl font-semibold leading-[1.12] tracking-[-0.035em] md:text-5xl text-[#0f172a] dark:text-white">
+      Install components with <span className="text-[#00A6F4] dark:text-[#38BDF8]">Sora CLI</span>
+    </h1>
+    <p className="max-w-xl text-base leading-7 text-[#475569] dark:text-[#94a3b8]" style={{ marginTop: 16, marginBottom: 0 }}>
+      The universal, zero-setup CLI for installing animated components from any shadcn-compatible registry. Features automatic icon conversion, Tailwind v3 and v4 updates, and built-in AI MCP.
+    </p>
+    <div className="mt-7 flex flex-wrap gap-3">
+      <a href="/quickstart" className="inline-flex h-10 items-center rounded-lg px-4 text-sm font-medium no-underline bg-[#00A6F4] text-white hover:bg-[#0284c7] dark:bg-[#38BDF8] dark:text-[#082f49] dark:hover:bg-[#7dd3fc] !border-b-0 transition-colors">
+        Quickstart
+      </a>
+      <a href="#set-up-your-coding-agent" className="inline-flex h-10 items-center rounded-lg px-4 text-sm font-medium no-underline border border-[#bae6fd] dark:border-[#262626] !border-b-[#bae6fd] dark:!border-b-[#262626] text-[#0369a1] dark:text-[#d4d4d4] hover:bg-[#f0f9ff] dark:hover:bg-[#1c1d1d] transition-colors">
+        Set up AI agent
+      </a>
+      <a href="/commands/init" className="inline-flex h-10 items-center rounded-lg px-4 text-sm font-medium no-underline border border-[#bae6fd] dark:border-[#262626] !border-b-[#bae6fd] dark:!border-b-[#262626] text-[#0369a1] dark:text-[#d4d4d4] hover:bg-[#f0f9ff] dark:hover:bg-[#1c1d1d] transition-colors">
+        CLI reference
+      </a>
+    </div>
+  </div>
+  <div className="min-w-0" role="region" aria-label="Install with Sora CLI">
+    <HeroInstall />
+    <p className="m-0 mt-2 text-xs leading-5 text-[#64748b] dark:text-[#94a3b8]">
+      Zero init required. Compatible with npm, bun, pnpm, and yarn. AI integration: <a href="/commands/mcp" className="sora-link">Model Context Protocol</a>.
+    </p>
+  </div>
+</section>
 
-It defaults to the [Sora UI](https://ui.soralabs.studio) motion registry, skipping the extra step of registering scopes — while retaining universal compatibility with any remote registry, local file, or GitHub reference.
+<section id="set-up-your-coding-agent" aria-labelledby="agent-setup-title" className="not-prose mx-auto w-full max-w-6xl px-5 pb-10 text-left text-[#082f49] dark:text-[#ededed] md:px-8">
+  <div className="grid gap-6 rounded-xl border border-[#e2e8f0] dark:border-[#262626] bg-[#ffffff] dark:bg-[#141515] p-6 sora-agent-grid">
+    <div className="flex items-start gap-4">
+      <div className="w-10 h-10 rounded-lg bg-[#e0f2fe] dark:bg-[#082f49] flex items-center justify-center shrink-0 mt-1">
+        <img src="/assets/icons/terminal.svg" width="20" height="20" alt="Terminal" className="m-0 block" noZoom />
+      </div>
+      <div>
+        <h2 id="agent-setup-title" className="m-0 text-xl font-medium tracking-[-0.02em] text-[#0f172a] dark:text-white">
+          Set up your coding agent with one prompt
+        </h2>
+        <p className="mb-0 mt-2 text-sm leading-6 text-[#64748b] dark:text-[#94a3b8]">
+          Paste this into Cursor, Claude Code, Antigravity, or VS Code. It automatically fetches the agent playbook, connects the native MCP server, and verifies the tools.
+        </p>
+      </div>
+    </div>
+    <div className="min-w-0">
+      <PromptBlock text="Set up Sora CLI for me. Fetch https://cli.soralabs.studio/for-agents.md and follow it." />
+    </div>
+  </div>
+</section>
 
-<CardGroup cols={2}>
-  <Card title="Quickstart" icon="bolt" href="/quickstart">
-    Get up and running with your first animated component in seconds.
-  </Card>
-  <Card title="CLI Commands" icon="terminal" href="/commands/init">
-    Complete reference for `init`, `add`, `list`, `search`, `info`, `diff`, `doctor`, `build`, `validate`, and `mcp`.
-  </Card>
-  <Card title="AI Integration (MCP)" icon="robot" href="/commands/mcp">
-    1-click setup for Cursor, Claude Code, VS Code, Antigravity, and Windsurf.
-  </Card>
-  <Card title="Registry Authoring" icon="boxes-stacked" href="/commands/build">
-    Compile and publish your own shadcn-compatible component registry.
-  </Card>
-</CardGroup>
+<section className="not-prose mx-auto w-full max-w-6xl px-5 pb-16 text-left text-[#082f49] dark:text-[#ededed] md:px-8">
+  <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+    <a href="/quickstart" className="group flex flex-col overflow-hidden rounded-xl border border-[#e2e8f0] dark:border-[#262626] bg-[#ffffff] dark:bg-[#141515] text-[#082f49] dark:text-[#ededed] no-underline transition-colors hover:border-[#38bdf8] dark:hover:border-[#0284c7] !border-b-[#e2e8f0] dark:!border-b-[#262626] hover:!border-b-[#38bdf8] dark:hover:!border-b-[#0284c7]">
+      <div className="flex flex-1 flex-col p-6">
+        <div className="w-10 h-10 rounded-lg bg-[#e0f2fe] dark:bg-[#082f49] flex items-center justify-center mb-4">
+          <img src="/assets/icons/zap.svg" width="20" height="20" alt="Zero-Setup Start" className="m-0 block" noZoom />
+        </div>
+        <h3 className="m-0 text-base font-medium tracking-[-0.015em] text-[#0f172a] dark:text-white">Zero-Setup Start</h3>
+        <p className="mb-6 mt-2 text-sm leading-6 text-[#64748b] dark:text-[#94a3b8]">
+          Install animated components directly into any project with package.json. No manual config or forced init step needed.
+        </p>
+        <span className="mt-auto flex items-center justify-between text-xs font-medium text-[#0284c7] dark:text-[#38bdf8]">
+          Quickstart guide
+          <img src="/assets/icons/arrow-right.svg" width="14" height="14" alt="" className="m-0 block" noZoom />
+        </span>
+      </div>
+    </a>
 
-## Why Sora CLI?
+    <a href="/commands/mcp" className="group flex flex-col overflow-hidden rounded-xl border border-[#e2e8f0] dark:border-[#262626] bg-[#ffffff] dark:bg-[#141515] text-[#082f49] dark:text-[#ededed] no-underline transition-colors hover:border-[#38bdf8] dark:hover:border-[#0284c7] !border-b-[#e2e8f0] dark:!border-b-[#262626] hover:!border-b-[#38bdf8] dark:hover:!border-b-[#0284c7]">
+      <div className="flex flex-1 flex-col p-6">
+        <div className="w-10 h-10 rounded-lg bg-[#e0f2fe] dark:bg-[#082f49] flex items-center justify-center mb-4">
+          <img src="/assets/icons/bot.svg" width="20" height="20" alt="AI-Native MCP" className="m-0 block" noZoom />
+        </div>
+        <h3 className="m-0 text-base font-medium tracking-[-0.015em] text-[#0f172a] dark:text-white">AI-Native MCP</h3>
+        <p className="mb-6 mt-2 text-sm leading-6 text-[#64748b] dark:text-[#94a3b8]">
+          Native Model Context Protocol server lets Claude Code, Cursor, and Antigravity discover and install components autonomously.
+        </p>
+        <span className="mt-auto flex items-center justify-between text-xs font-medium text-[#0284c7] dark:text-[#38bdf8]">
+          MCP reference
+          <img src="/assets/icons/arrow-right.svg" width="14" height="14" alt="" className="m-0 block" noZoom />
+        </span>
+      </div>
+    </a>
 
-- **Zero Required Setup**: Install components immediately — no prior `init` or `components.json` required unless you want one.
-- **Motion & AI Ready**: Built to serve the Sora UI ecosystem with first-class animation support (`framer-motion`, `gsap`, Motion) and `prefers-reduced-motion` compliance.
-- **Model Context Protocol (MCP)**: Native MCP server enabling AI coding assistants (Cursor, Claude Code, Antigravity) to search, preview, and install components automatically.
-- **Universal Component Specifiers**: Install not just by name, but via direct JSON URLs, GitHub repos (`owner/repo/item`), or scoped namespaces (`@magicui/item`).
-- **Base Primitives Fallback**: Automatically checks the Sora UI registry first; if a bare name is not found (e.g. `button`, `dialog`), it transparently falls back to `ui.shadcn.com` using your project's configured style.
-- **Intelligent RSC Transformation**: Automatically handles React Server Components (`"use client"`) — stripping directives in Vite/Astro and injecting them when needed in Next.js App Router.
-- **Registry Authoring & Validation**: Package and compile your own UI libraries with `build` and ensure distribution integrity with `validate`.
-- **Environment Diagnostics**: Built-in `doctor` diagnoses missing Tailwind configurations, Node.js version mismatches, and lockfile issues.
+    <a href="/guides/universal-addressing" className="group flex flex-col overflow-hidden rounded-xl border border-[#e2e8f0] dark:border-[#262626] bg-[#ffffff] dark:bg-[#141515] text-[#082f49] dark:text-[#ededed] no-underline transition-colors hover:border-[#38bdf8] dark:hover:border-[#0284c7] !border-b-[#e2e8f0] dark:!border-b-[#262626] hover:!border-b-[#38bdf8] dark:hover:!border-b-[#0284c7]">
+      <div className="flex flex-1 flex-col p-6">
+        <div className="w-10 h-10 rounded-lg bg-[#e0f2fe] dark:bg-[#082f49] flex items-center justify-center mb-4">
+          <img src="/assets/icons/globe.svg" width="20" height="20" alt="Universal Addressing" className="m-0 block" noZoom />
+        </div>
+        <h3 className="m-0 text-base font-medium tracking-[-0.015em] text-[#0f172a] dark:text-white">Universal Addressing</h3>
+        <p className="mb-6 mt-2 text-sm leading-6 text-[#64748b] dark:text-[#94a3b8]">
+          Pull from Sora UI, fallback to shadcn base primitives, or target custom registries, GitHub repositories, and scoped namespaces.
+        </p>
+        <span className="mt-auto flex items-center justify-between text-xs font-medium text-[#0284c7] dark:text-[#38bdf8]">
+          Addressing guide
+          <img src="/assets/icons/arrow-right.svg" width="14" height="14" alt="" className="m-0 block" noZoom />
+        </span>
+      </div>
+    </a>
+
+    <a href="/commands/build" className="group flex flex-col overflow-hidden rounded-xl border border-[#e2e8f0] dark:border-[#262626] bg-[#ffffff] dark:bg-[#141515] text-[#082f49] dark:text-[#ededed] no-underline transition-colors hover:border-[#38bdf8] dark:hover:border-[#0284c7] !border-b-[#e2e8f0] dark:!border-b-[#262626] hover:!border-b-[#38bdf8] dark:hover:!border-b-[#0284c7]">
+      <div className="flex flex-1 flex-col p-6">
+        <div className="w-10 h-10 rounded-lg bg-[#e0f2fe] dark:bg-[#082f49] flex items-center justify-center mb-4">
+          <img src="/assets/icons/package.svg" width="20" height="20" alt="Registry Authoring" className="m-0 block" noZoom />
+        </div>
+        <h3 className="m-0 text-base font-medium tracking-[-0.015em] text-[#0f172a] dark:text-white">Registry Authoring</h3>
+        <p className="mb-6 mt-2 text-sm leading-6 text-[#64748b] dark:text-[#94a3b8]">
+          Compile component collections with <code>sora build</code> and verify schema and source file integrity using <code>sora validate</code>.
+        </p>
+        <span className="mt-auto flex items-center justify-between text-xs font-medium text-[#0284c7] dark:text-[#38bdf8]">
+          Authoring guide
+          <img src="/assets/icons/arrow-right.svg" width="14" height="14" alt="" className="m-0 block" noZoom />
+        </span>
+      </div>
+    </a>
+
+    <a href="/guides/monorepos" className="group flex flex-col overflow-hidden rounded-xl border border-[#e2e8f0] dark:border-[#262626] bg-[#ffffff] dark:bg-[#141515] text-[#082f49] dark:text-[#ededed] no-underline transition-colors hover:border-[#38bdf8] dark:hover:border-[#0284c7] !border-b-[#e2e8f0] dark:!border-b-[#262626] hover:!border-b-[#38bdf8] dark:hover:!border-b-[#0284c7]">
+      <div className="flex flex-1 flex-col p-6">
+        <div className="w-10 h-10 rounded-lg bg-[#e0f2fe] dark:bg-[#082f49] flex items-center justify-center mb-4">
+          <img src="/assets/icons/layers.svg" width="20" height="20" alt="Monorepos & Workspaces" className="m-0 block" noZoom />
+        </div>
+        <h3 className="m-0 text-base font-medium tracking-[-0.015em] text-[#0f172a] dark:text-white">Monorepos & Workspaces</h3>
+        <p className="mb-6 mt-2 text-sm leading-6 text-[#64748b] dark:text-[#94a3b8]">
+          Use <code>--cwd</code> to install components into workspace subpackages across Turborepo, pnpm, and Bun projects.
+        </p>
+        <span className="mt-auto flex items-center justify-between text-xs font-medium text-[#0284c7] dark:text-[#38bdf8]">
+          Monorepo setups
+          <img src="/assets/icons/arrow-right.svg" width="14" height="14" alt="" className="m-0 block" noZoom />
+        </span>
+      </div>
+    </a>
+
+    <a href="/commands/doctor" className="group flex flex-col overflow-hidden rounded-xl border border-[#e2e8f0] dark:border-[#262626] bg-[#ffffff] dark:bg-[#141515] text-[#082f49] dark:text-[#ededed] no-underline transition-colors hover:border-[#38bdf8] dark:hover:border-[#0284c7] !border-b-[#e2e8f0] dark:!border-b-[#262626] hover:!border-b-[#38bdf8] dark:hover:!border-b-[#0284c7]">
+      <div className="flex flex-1 flex-col p-6">
+        <div className="w-10 h-10 rounded-lg bg-[#e0f2fe] dark:bg-[#082f49] flex items-center justify-center mb-4">
+          <img src="/assets/icons/stethoscope.svg" width="20" height="20" alt="Environment Diagnostics" className="m-0 block" noZoom />
+        </div>
+        <h3 className="m-0 text-base font-medium tracking-[-0.015em] text-[#0f172a] dark:text-white">Environment Diagnostics</h3>
+        <p className="mb-6 mt-2 text-sm leading-6 text-[#64748b] dark:text-[#94a3b8]">
+          Diagnose package managers, path aliases, Tailwind configs, and lockfile issues in one command with <code>sora doctor</code>.
+        </p>
+        <span className="mt-auto flex items-center justify-between text-xs font-medium text-[#0284c7] dark:text-[#38bdf8]">
+          Doctor command
+          <img src="/assets/icons/arrow-right.svg" width="14" height="14" alt="" className="m-0 block" noZoom />
+        </span>
+      </div>
+    </a>
+  </div>
+
+  <div className="mt-8 grid gap-6 rounded-xl border border-[#e2e8f0] dark:border-[#262626] bg-[#ffffff] dark:bg-[#141515] p-6 sm:grid-cols-[1fr_auto] sm:items-center">
+    <div className="flex items-start gap-4">
+      <div className="w-10 h-10 rounded-lg bg-[#e0f2fe] dark:bg-[#082f49] flex items-center justify-center shrink-0 mt-1">
+        <img src="/assets/icons/terminal.svg" width="20" height="20" alt="Terminal" className="m-0 block" noZoom />
+      </div>
+      <div>
+        <h2 className="m-0 text-base font-medium text-[#0f172a] dark:text-white">Connect your AI coding assistant to Sora</h2>
+        <p className="mb-0 mt-2 text-sm leading-6 text-[#64748b] dark:text-[#94a3b8]">
+          Configure the native MCP server in seconds: <code>npx @soralabs/cli mcp init</code>
+        </p>
+      </div>
+    </div>
+    <div className="flex flex-wrap gap-2 text-sm sm:justify-self-end">
+      <a href="/commands/mcp" className="inline-flex h-10 items-center rounded-lg border border-[#bae6fd] dark:border-[#262626] px-4 text-[#0284c7] dark:text-[#38bdf8] no-underline hover:bg-[#f0f9ff] dark:hover:bg-[#1c1d1d] !border-b-[#bae6fd] dark:!border-b-[#262626]">
+        Cursor & Claude Code
+      </a>
+      <a href="/for-agents" className="inline-flex h-10 items-center rounded-lg border border-[#bae6fd] dark:border-[#262626] px-4 text-[#0284c7] dark:text-[#38bdf8] no-underline hover:bg-[#f0f9ff] dark:hover:bg-[#1c1d1d] !border-b-[#bae6fd] dark:!border-b-[#262626]">
+        Agent Playbook
+      </a>
+    </div>
+  </div>
+
+  <div className="mt-8 flex flex-wrap items-center justify-between gap-6 border-t border-[#e2e8f0] dark:border-[#262626] pt-6 text-[11px] text-[#64748b] dark:text-[#94a3b8]">
+    <span>Sora Labs · Motion-first UI tools & registries for modern web applications.</span>
+    <div className="flex gap-6">
+      <a href="https://github.com/SoraLabsOSS/cli" className="no-underline text-inherit hover:text-[#00A6F4] !border-b-0">GitHub</a>
+      <a href="https://ui.soralabs.studio" className="no-underline text-inherit hover:text-[#00A6F4] !border-b-0">Sora UI</a>
+      <a href="https://www.npmjs.com/package/@soralabs/cli" className="no-underline text-inherit hover:text-[#00A6F4] !border-b-0">npm</a>
+    </div>
+  </div>
+</section>

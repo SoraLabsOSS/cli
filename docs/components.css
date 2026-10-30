@@ -1,0 +1,143 @@
+/* Header logo sizing */
+header a[href] img,
+nav a[href] img,
+#navbar a[href] img,
+#header a[href] img,
+#navbar a:has(> img) img,
+header a:has(> img) img {
+  height: 28px !important;
+  max-height: 28px !important;
+  width: auto !important;
+  object-fit: contain;
+}
+
+/* Footer logo sizing */
+footer img,
+#footer img,
+footer a:has(> img) img,
+#footer a:has(> img) img {
+  height: 34px !important;
+  max-height: 34px !important;
+  width: auto !important;
+  object-fit: contain;
+}
+
+/* Shared button and card spec: 40px buttons, 8px button radius, 12px card radius. */
+[role="navigation"][aria-label="Documentation pages"] > a {
+  min-height: 40px;
+  border-radius: var(--g-radius-md, 8px) !important;
+  padding: 4px 12px !important;
+}
+#content-area .card {
+  border-radius: var(--g-radius-lg, 12px);
+}
+
+/* Mintlify's "Suggest edits" / "Raise issue" toolbar */
+#content-area #content:has(+ .feedback-toolbar) {
+  margin-bottom: 16px;
+}
+#content-area .feedback-toolbar a[href*="/edit/"],
+#content-area .feedback-toolbar a[href*="/issues/new"] {
+  min-height: 40px;
+  padding: 4px 12px;
+  gap: 4px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #64748b;
+  transition: border-color 150ms ease, background-color 150ms ease, color 150ms ease;
+}
+#content-area .feedback-toolbar a[href*="/edit/"]:hover,
+#content-area .feedback-toolbar a[href*="/issues/new"]:hover {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+  color: #0f172a;
+}
+#content-area .feedback-toolbar a[href*="/edit/"]:focus-visible,
+#content-area .feedback-toolbar a[href*="/issues/new"]:focus-visible {
+  outline: 2px solid #00A6F4;
+  outline-offset: 4px;
+}
+
+/* Built-in page feedback: blue brand aligned */
+#feedback-thumbs-up,
+#feedback-thumbs-down {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: transparent;
+  color: #64748b;
+  transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease;
+}
+#feedback-thumbs-up:hover,
+#feedback-thumbs-down:hover {
+  border-color: #7dd3fc;
+  background: #f0f9ff;
+  color: #0369a1;
+}
+#feedback-thumbs-up:focus-visible,
+#feedback-thumbs-down:focus-visible {
+  outline: 2px solid #00A6F4;
+  outline-offset: 2px;
+}
+#feedback-form {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #0f172a;
+}
+:is(.dark) #feedback-thumbs-up,
+:is(.dark) #feedback-thumbs-down {
+  border-color: #262626;
+  color: #a3a3a3;
+}
+:is(.dark) #feedback-thumbs-up:hover,
+:is(.dark) #feedback-thumbs-down:hover {
+  border-color: #38bdf8;
+  background: #082f49;
+  color: #38bdf8;
+}
+:is(.dark) #feedback-thumbs-up:focus-visible,
+:is(.dark) #feedback-thumbs-down:focus-visible {
+  outline-color: #38bdf8;
+}
+:is(.dark) #feedback-form {
+  border-color: #262626;
+  background: #141515;
+  color: #ededed;
+}
+
+/* Home hero: two columns on wide screens */
+@media (min-width: 1024px) {
+  .sora-hero-grid, .gfy-hero-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); }
+  .sora-agent-grid, .gfy-agent-grid { grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); align-items: center; }
+}
+
+/* Home hero snippet: custom tablist, wrapped code, copy button */
+.sora-snippet, .gfy-snippet { border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff; overflow: hidden; }
+.sora-snippet-bar, .gfy-snippet-bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 8px 0 4px; border-bottom: 1px solid #e2e8f0; background: #f8fafc; }
+.sora-tablist, .gfy-tablist { display: flex; flex-wrap: wrap; }
+.sora-tab, .gfy-tab { padding: 10px 12px; font-size: 12px; font-weight: 500; color: #64748b; background: none; border: 0; border-bottom: 2px solid transparent; cursor: pointer; }
+.sora-tab[aria-selected="true"], .gfy-tab[aria-selected="true"] { color: #0284c7; border-bottom-color: #00A6F4; font-weight: 600; }
+.sora-tab:hover, .gfy-tab:hover { color: #0f172a; }
+.sora-tab:focus-visible, .sora-copy:focus-visible, .sora-panel:focus-visible,
+.gfy-tab:focus-visible, .gfy-copy:focus-visible, .gfy-panel:focus-visible { outline: 2px solid #00A6F4; outline-offset: -2px; border-radius: 6px; }
+.sora-snippet-title, .gfy-snippet-title { padding: 10px 8px; font-size: 12px; font-weight: 500; color: #64748b; }
+.sora-copy, .gfy-copy { font-size: 12px; font-weight: 500; color: #0369a1; background: transparent; border: 1px solid #bae6fd; border-radius: 6px; padding: 3px 10px; cursor: pointer; }
+.sora-copy:hover, .gfy-copy:hover { background: #f0f9ff; }
+.sora-panel, .gfy-panel { padding: 14px 16px; }
+.sora-pre, .gfy-pre { margin: 0; padding: 0; background: none; white-space: pre-wrap; overflow-wrap: anywhere; word-break: normal; font-family: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; line-height: 1.65; color: #0f172a; }
+.sora-link, .gfy-link { color: #0284c7 !important; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: rgba(2,132,199,.45); border-bottom: 0 !important; }
+.sora-link:hover, .gfy-link:hover { text-decoration-color: currentColor; }
+
+:is(.dark) .sora-snippet, :is(.dark) .gfy-snippet { border-color: #262626; background: #141515; }
+:is(.dark) .sora-snippet-bar, :is(.dark) .gfy-snippet-bar { border-bottom-color: #262626; background: #101111; }
+:is(.dark) .sora-tab, :is(.dark) .sora-snippet-title,
+:is(.dark) .gfy-tab, :is(.dark) .gfy-snippet-title { color: #a3a3a3; }
+:is(.dark) .sora-tab:hover, :is(.dark) .gfy-tab:hover { color: #ededed; }
+:is(.dark) .sora-tab[aria-selected="true"], :is(.dark) .gfy-tab[aria-selected="true"] { color: #38bdf8; border-bottom-color: #38bdf8; }
+:is(.dark) .sora-tab:focus-visible, :is(.dark) .sora-copy:focus-visible, :is(.dark) .sora-panel:focus-visible,
+:is(.dark) .gfy-tab:focus-visible, :is(.dark) .gfy-copy:focus-visible, :is(.dark) .gfy-panel:focus-visible { outline-color: #38bdf8; }
+:is(.dark) .sora-copy, :is(.dark) .gfy-copy { color: #38bdf8; border-color: #0369a1; }
+:is(.dark) .sora-copy:hover, :is(.dark) .gfy-copy:hover { background: #082f49; }
+:is(.dark) .sora-pre, :is(.dark) .gfy-pre { color: #ededed; }
+:is(.dark) .sora-link, :is(.dark) .gfy-link { color: #38bdf8 !important; text-decoration-color: rgba(56,189,248,.45); }
