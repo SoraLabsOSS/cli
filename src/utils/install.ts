@@ -7,6 +7,7 @@ import type {
   ProjectConfig,
   RegistryItem,
 } from "@/types.js";
+import { transformIcons } from "@/utils/transform-icons.js";
 import { transformRsc } from "@/utils/transform-rsc.js";
 
 export type OverwriteChoice = "overwrite" | "skip" | "all";
@@ -160,10 +161,12 @@ async function writeSingleFile(
   rsc: boolean,
   overwrite: boolean,
   onConflict: (filename: string) => Promise<OverwriteChoice>,
-  dryRun: boolean
+  dryRun: boolean,
+  iconLibrary?: string
 ): Promise<{ overwriteAll: boolean; status: FileWriteStatus }> {
-  const transformed = transformRsc(content, rsc);
-  const newContent = rewriteAliases(transformed, aliases);
+  const rscTransformed = transformRsc(content, rsc);
+  const iconTransformed = transformIcons(rscTransformed, iconLibrary);
+  const newContent = rewriteAliases(iconTransformed, aliases);
   const fileExists = existsSync(destPath);
 
   if (fileExists) {
@@ -243,7 +246,8 @@ export async function writeComponent(
       config.rsc ?? false,
       overwrite,
       onConflict,
-      dryRun
+      dryRun,
+      config.iconLibrary
     );
     overwrite = result.overwriteAll;
     results[result.status].push(relativeTarget);

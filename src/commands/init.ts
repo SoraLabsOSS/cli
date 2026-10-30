@@ -143,9 +143,7 @@ async function installBaseDependencies(
   packageManager: PackageManager
 ): Promise<void> {
   const installed = getInstalledDependencyNames(cwd);
-  const baseDeps = ["clsx", "tailwind-merge"].filter(
-    (dep) => !installed.has(dep)
-  );
+  const baseDeps = ["cn"].filter((dep) => !installed.has(dep));
 
   if (baseDeps.length === 0) {
     return;

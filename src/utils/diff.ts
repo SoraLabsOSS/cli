@@ -10,6 +10,7 @@ import {
   resolveTarget,
   rewriteAliases,
 } from "@/utils/install.js";
+import { transformIcons } from "@/utils/transform-icons.js";
 import { transformRsc } from "@/utils/transform-rsc.js";
 
 export type FileDiffStatus = "changed" | "not-installed" | "up-to-date";
@@ -58,8 +59,9 @@ export function diffComponentFiles(
     }
 
     const localContent = readFileSync(destPath, "utf8");
-    const transformed = transformRsc(file.content, config.rsc ?? false);
-    const registryContent = rewriteAliases(transformed, config.aliases);
+    const rscTransformed = transformRsc(file.content, config.rsc ?? false);
+    const iconTransformed = transformIcons(rscTransformed, config.iconLibrary);
+    const registryContent = rewriteAliases(iconTransformed, config.aliases);
 
     if (
       normalizeLineEndings(localContent) ===

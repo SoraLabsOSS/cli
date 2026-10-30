@@ -102,3 +102,27 @@ npx @soralabs/cli add text-effect --view
 
 ### `--silent, -s`
 Suppresses detailed per-file output, printing only the summary completion line.
+
+---
+
+## Automatic Transformations & Setup
+
+During component installation, `sora add` automatically performs several intelligent setup steps:
+
+### 1. Icon Transformation (`iconLibrary`)
+If your project specifies an `iconLibrary` in `components.json` (such as `tabler`, `radix`, `hugeicons`, `phosphor`, or `remixicon`), `add` automatically:
+- Parses component ASTs and converts `<IconPlaceholder />` tags to the corresponding icon component from your chosen library.
+- Converts legacy `lucide-react` imports and JSX tags to your target icon library equivalents.
+- Automatically adds the required icon package (e.g. `@tabler/icons-react`, `@radix-ui/react-icons`) to your project's dependencies.
+
+### 2. Environment Variables (`envVars`)
+When a component or block requires environment variables (e.g., upload services, authentication providers, payment integrations):
+- Detects `envVars` declared in registry schemas.
+- Appends missing keys into your `.env.local` (or existing `.env`, `.env.example`).
+- Preserves your existing custom values and comments without overwriting them.
+- Previews variables to be added when running with `--dry-run`.
+
+### 3. Tailwind Configuration & Keyframes (v3 & v4)
+- **Tailwind CSS v3**: Automatically parses and injects plugins (e.g., `tailwindcss-animate`), dark mode configuration, and merges `theme.extend` (animations, keyframes, colors) into `tailwind.config.ts` or `tailwind.config.js`.
+- **Tailwind CSS v4**: Injects plugins (`@plugin`), `@keyframes`, and CSS animation variables (`--animate-*`) directly into `@theme inline` in your global CSS stylesheet.
+- **Smart `@apply` Merging**: Uses `cn` to resolve utility class conflicts when merging registry `@apply` directives, preventing duplicate or conflicting Tailwind rules.

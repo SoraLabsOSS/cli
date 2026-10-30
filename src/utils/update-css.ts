@@ -1,9 +1,9 @@
 import type { Dirent } from "node:fs";
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
+import { cn } from "cn";
 import type { AtRule, Declaration, Root, Rule } from "postcss";
 import postcss from "postcss";
-import { twMerge } from "tailwind-merge";
 import type {
   CssDefinition,
   RegistryItem,
@@ -180,6 +180,68 @@ function mergeCssDefinitions(
   }
 }
 
+function extractTailwindPlugins(
+  plugins: string[] | undefined,
+  css: Record<string, CssDefinition>
+): void {
+  for (const rawPlugin of plugins ?? []) {
+    const pluginName = rawPlugin.replace(/^require\(["']|["']\)$/g, "").trim();
+    if (pluginName) {
+      css[`@plugin "${pluginName}"`] = {};
+    }
+  }
+}
+
+function extractTailwindKeyframes(
+  theme: Record<string, unknown> | undefined,
+  css: Record<string, CssDefinition>
+): void {
+  const extend = theme?.extend as Record<string, unknown> | undefined;
+  const keyframes = (extend?.keyframes ?? theme?.keyframes) as
+    | Record<string, unknown>
+    | undefined;
+  if (keyframes && isPlainObject(keyframes)) {
+    for (const [kfName, kfDef] of Object.entries(keyframes)) {
+      if (isPlainObject(kfDef)) {
+        css[`@keyframes ${kfName}`] = kfDef as CssDefinition;
+      }
+    }
+  }
+}
+
+function extractTailwindAnimations(
+  theme: Record<string, unknown> | undefined,
+  cssVars: RegistryItemCssVars
+): void {
+  const extend = theme?.extend as Record<string, unknown> | undefined;
+  const animations = (extend?.animation ?? theme?.animation) as
+    | Record<string, unknown>
+    | undefined;
+  if (animations && isPlainObject(animations)) {
+    cssVars.theme ??= {};
+    for (const [animName, animVal] of Object.entries(animations)) {
+      if (typeof animVal === "string") {
+        cssVars.theme[`--animate-${animName}`] = animVal;
+      }
+    }
+  }
+}
+
+function mergeTailwindConfigToCss(
+  item: RegistryItem,
+  css: Record<string, CssDefinition>,
+  cssVars: RegistryItemCssVars
+): void {
+  const tailwindConfig = item.tailwind?.config;
+  if (!tailwindConfig) {
+    return;
+  }
+  extractTailwindPlugins(tailwindConfig.plugins, css);
+  const theme = tailwindConfig.theme as Record<string, unknown> | undefined;
+  extractTailwindKeyframes(theme, css);
+  extractTailwindAnimations(theme, cssVars);
+}
+
 /**
  * Merges every resolved item's `css`/`cssVars` into one payload, later
  * items winning on conflicts — mirrors shadcn's deepmerge of the resolved
@@ -197,6 +259,7 @@ export function collectCssPayload(items: RegistryItem[]): CssPayload {
     for (const [scope, vars] of Object.entries(item.cssVars ?? {})) {
       cssVars[scope] = { ...cssVars[scope], ...vars };
     }
+    mergeTailwindConfigToCss(item, css, cssVars);
   }
 
   return { css, cssVars };
@@ -818,14 +881,14 @@ function applyRuleAtRuleChild(rule: Rule, prop: string): void {
     return;
   }
 
-  // Merge into an existing @apply (via tailwind-merge, so conflicting
+  // Merge into an existing @apply (via cn, so conflicting
   // utilities collapse) instead of stacking duplicate @apply rules.
   if (name === "apply") {
     const existingApply = rule.nodes?.find(
       (node): node is AtRule => node.type === "atrule" && node.name === "apply"
     );
     if (existingApply) {
-      existingApply.params = twMerge(existingApply.params, params);
+      existingApply.params = cn(existingApply.params, params);
       return;
     }
   }

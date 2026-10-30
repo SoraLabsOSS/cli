@@ -2,10 +2,11 @@
   "dependencies": {
     "@clack/prompts": "^1.7.0",
     "@modelcontextprotocol/sdk": "^1.32.2",
+    "cn": "^0.5.1",
     "diff": "^9.0.0",
     "picocolors": "^1.1.1",
     "postcss": "^8.5.25",
-    "tailwind-merge": "^3.6.0"
+    "ts-morph": "^28.0.0"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.3",
@@ -29,7 +30,7 @@
     "prepare": "lefthook install"
   },
   "type": "module",
-  "version": "0.5.7",
+  "version": "0.5.8",
   "description": "CLI to install components from any shadcn-compatible registry — defaults to Sora UI and other Sora Labs products",
   "license": "MIT",
   "author": "Axyl1410",

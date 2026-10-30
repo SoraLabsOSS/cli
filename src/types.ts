@@ -19,6 +19,23 @@ export type CssDefinition = string | { [key: string]: CssDefinition };
  */
 export type RegistryItemCssVars = Record<string, Record<string, string>>;
 
+/** `registry-item` `envVars` field: key/value pairs for the project's env file. */
+export type RegistryItemEnvVars = Record<string, string>;
+
+/**
+ * `registry-item` `tailwind.config` field. `plugins` entries are TS/JS
+ * expressions (e.g. `require("tailwindcss-animate")`) or bare package names.
+ */
+export interface RegistryTailwindConfig {
+  content?: string[];
+  plugins?: string[];
+  theme?: Record<string, unknown>;
+}
+
+export interface RegistryItemTailwind {
+  config?: RegistryTailwindConfig;
+}
+
 export interface RegistryItem {
   $schema?: string;
   css?: Record<string, CssDefinition>;
@@ -26,9 +43,11 @@ export interface RegistryItem {
   dependencies?: string[];
   description?: string;
   devDependencies?: string[];
+  envVars?: RegistryItemEnvVars;
   files: RegistryFile[];
   name: string;
   registryDependencies?: string[];
+  tailwind?: RegistryItemTailwind;
   title?: string;
   type: string;
 }
@@ -90,6 +109,11 @@ export interface ProjectConfig {
    * directory (e.g. `--cwd packages/ui` for a monorepo workspace).
    */
   cwd: string;
+  /**
+   * Icon library from `components.json` (`"lucide"` when unset). Used when
+   * installing items that ship `<IconPlaceholder />` tags.
+   */
+  iconLibrary?: string;
   packageManager: PackageManager;
   /**
    * Optional custom registries declared in components.json under the
@@ -109,6 +133,11 @@ export interface ProjectConfig {
    */
   shadcnStyle?: string;
   srcDir: string;
+  /**
+   * Absolute path to the project's Tailwind config, when one exists. Empty
+   * for Tailwind v4 projects, which are configured in CSS instead.
+   */
+  tailwindConfig?: string;
   /**
    * True only when the alias came from a tsconfig/jsconfig `paths` entry.
    * `components.json` aliases satisfy `aliasConfigured` but don't make a

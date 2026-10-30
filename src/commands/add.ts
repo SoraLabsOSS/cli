@@ -37,6 +37,11 @@ import {
   resolveRegistryUrl,
 } from "@/utils/registry.js";
 import { spinner } from "@/utils/spinner.js";
+import {
+  detectIconUsage,
+  getIconLibraryPackages,
+  transformIcons,
+} from "@/utils/transform-icons.js";
 import { transformRsc } from "@/utils/transform-rsc.js";
 import {
   collectNpmDeps,
@@ -50,6 +55,11 @@ import {
   shouldOverwriteCssVars,
   updateGlobalCss,
 } from "@/utils/update-css.js";
+import { collectEnvVars, updateEnvVars } from "@/utils/update-env-vars.js";
+import {
+  hasTailwindPayload,
+  updateTailwindConfig,
+} from "@/utils/update-tailwind-config.js";
 
 interface AddOptions {
   cwd?: string;
@@ -110,8 +120,12 @@ function printComponentFiles(
         continue;
       }
       fileHeader(sanitize(resolveTarget(file, item, config)));
-      const transformed = transformRsc(file.content, config.rsc ?? false);
-      console.log(sanitize(rewriteAliases(transformed, config.aliases)));
+      const rscTransformed = transformRsc(file.content, config.rsc ?? false);
+      const iconTransformed = transformIcons(
+        rscTransformed,
+        config.iconLibrary
+      );
+      console.log(sanitize(rewriteAliases(iconTransformed, config.aliases)));
       console.log();
     }
   }
@@ -127,8 +141,9 @@ async function collectDepsAndConfirm(
   allComponents: RegistryItem[],
   skipConfirm: boolean,
   registryUrl: string,
-  cwd: string
+  config: ProjectConfig
 ): Promise<ConfirmedInstall | null> {
+  const { cwd } = config;
   const needsUtils = allComponents.some((item) =>
     item.registryDependencies?.includes("utils")
   );
@@ -137,6 +152,20 @@ async function collectDepsAndConfirm(
   if (needsUtils && !collected.dependencies.includes("cn")) {
     collected.dependencies.push("cn");
   }
+
+  if (
+    config.iconLibrary &&
+    config.iconLibrary !== "lucide" &&
+    detectIconUsage(allComponents)
+  ) {
+    const iconPackages = getIconLibraryPackages(config.iconLibrary);
+    for (const pkg of iconPackages) {
+      if (!collected.dependencies.includes(pkg)) {
+        collected.dependencies.push(pkg);
+      }
+    }
+  }
+
   assertSafeDependencies([
     ...collected.dependencies,
     ...collected.devDependencies,
@@ -365,6 +394,72 @@ async function applyCssUpdates(
   }
 }
 
+function applyTailwindConfigUpdates(
+  allComponents: RegistryItem[],
+  config: ProjectConfig,
+  dryRun: boolean,
+  silent: boolean
+): void {
+  if (!hasTailwindPayload(allComponents)) {
+    return;
+  }
+
+  try {
+    const outcome = updateTailwindConfig(allComponents, config, { dryRun });
+    if (outcome.status === "no-config") {
+      warn(
+        "Some components define Tailwind config, but no tailwind.config file was found — add plugins/theme manually."
+      );
+      return;
+    }
+    if (!("path" in outcome) || silent) {
+      return;
+    }
+    if (outcome.status === "unchanged") {
+      bar(`Unchanged: ${sanitize(outcome.path)}`);
+    } else {
+      const label =
+        outcome.status === "would-update" ? "Would update" : "Updated";
+      done(`${label}: ${sanitize(outcome.path)}`);
+    }
+  } catch (err) {
+    warn(
+      `Failed to update Tailwind config: ${sanitize((err as Error).message)} — add plugins/theme manually.`
+    );
+  }
+}
+
+function applyEnvUpdates(
+  allComponents: RegistryItem[],
+  config: ProjectConfig,
+  dryRun: boolean,
+  silent: boolean
+): void {
+  const envVars = collectEnvVars(allComponents);
+  if (Object.keys(envVars).length === 0) {
+    return;
+  }
+
+  try {
+    const outcome = updateEnvVars(envVars, config.cwd, { dryRun });
+    if (outcome.status === "no-vars" || silent) {
+      return;
+    }
+    if (outcome.status === "unchanged") {
+      bar(`Unchanged: ${sanitize(outcome.path)}`);
+    } else {
+      const label =
+        outcome.status === "would-update" ? "Would update" : "Updated";
+      const varsList = outcome.added.join(", ");
+      done(`${label}: ${sanitize(outcome.path)} (${sanitize(varsList)})`);
+    }
+  } catch (err) {
+    warn(
+      `Failed to update environment variables: ${sanitize((err as Error).message)} — add them manually.`
+    );
+  }
+}
+
 async function performInstall(
   allComponents: RegistryItem[],
   config: ProjectConfig,
@@ -397,7 +492,9 @@ async function performInstall(
     dryRun,
     config.cwd
   );
+  applyTailwindConfigUpdates(allComponents, config, dryRun, silent);
   await applyCssUpdates(allComponents, config, dryRun, silent);
+  applyEnvUpdates(allComponents, config, dryRun, silent);
 
   const totalComponents = allComponents.length;
   const verb = dryRun ? "Would install" : "Done! Installed";
@@ -570,7 +667,7 @@ export async function add(
     allComponents,
     (options.yes ?? false) || (options.dryRun ?? false),
     registryUrl,
-    cwd
+    config
   );
   if (!confirmResult) {
     return true;

@@ -1,5 +1,5 @@
 import { existsSync, readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { DEFAULT_COMPONENT_PATH } from "@/constants.js";
 import type {
   ComponentAliases,
@@ -126,6 +126,35 @@ function detectAlias(cwd: string): {
   };
 }
 
+const TAILWIND_CONFIG_FILES = [
+  "tailwind.config.ts",
+  "tailwind.config.js",
+  "tailwind.config.mjs",
+  "tailwind.config.cjs",
+];
+
+/**
+ * `components.json`'s `tailwind.config` path wins (it may point outside cwd,
+ * e.g. at a monorepo root); otherwise the conventional config file at cwd.
+ */
+function findTailwindConfig(
+  cwd: string,
+  configured?: string
+): string | undefined {
+  if (configured) {
+    const fromConfig = resolve(cwd, configured);
+    if (existsSync(fromConfig)) {
+      return fromConfig;
+    }
+  }
+  for (const file of TAILWIND_CONFIG_FILES) {
+    const fullPath = join(cwd, file);
+    if (existsSync(fullPath)) {
+      return fullPath;
+    }
+  }
+}
+
 const ASTRO_CONFIG_FILES = [
   "astro.config.mjs",
   "astro.config.ts",
@@ -152,6 +181,7 @@ export function isAstroProject(cwd: string): boolean {
  */
 function readComponentsJson(cwd: string): {
   aliases?: Partial<ComponentAliases>;
+  iconLibrary?: string;
   registries?: Record<string, string>;
   rsc?: boolean;
   style?: string;
@@ -169,6 +199,7 @@ function readComponentsJson(cwd: string): {
   try {
     return JSON.parse(readFileSync(path, "utf8")) as {
       aliases?: Partial<ComponentAliases>;
+      iconLibrary?: string;
       registries?: Record<string, string>;
       rsc?: boolean;
       style?: string;
@@ -311,11 +342,13 @@ export function detectConfig(cwd: string): ProjectConfig {
       ? `${srcDir}/${DEFAULT_COMPONENT_PATH}`
       : DEFAULT_COMPONENT_PATH,
     cwd,
+    iconLibrary: componentsJson?.iconLibrary,
     packageManager: detectPackageManager(cwd),
     registries: componentsJson?.registries,
     rsc: detectRsc(cwd, componentsJson?.rsc),
     shadcnStyle: componentsJson?.style,
     srcDir,
+    tailwindConfig: findTailwindConfig(cwd, componentsJson?.tailwind?.config),
     tsconfigPathsConfigured: configured,
   };
 }

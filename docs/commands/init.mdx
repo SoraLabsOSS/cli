@@ -3,7 +3,7 @@ title: "init"
 description: "Initialize your project with components.json, utility helpers, and base styling"
 ---
 
-The `init` command sets up a project for Sora UI and shadcn-compatible components. It generates the `components.json` configuration, creates the standard `cn` utility helper in `lib/utils.ts`, writes base Tailwind CSS variables, and installs foundational dependencies (`clsx`, `tailwind-merge`).
+The `init` command sets up a project for Sora UI and shadcn-compatible components. It generates the `components.json` configuration, creates the standard `cn` utility helper in `lib/utils.ts`, writes base Tailwind CSS variables, and installs foundational dependencies (`cn`).
 
 <Note>
 Sora CLI does **not** strictly require `init` before installing components with `add` — the CLI automatically detects aliases, directories, and package managers on the fly. However, `init` is ideal for brand-new projects or when you want an explicit, persisted configuration.
@@ -55,7 +55,7 @@ Executing `init` will establish the following artifacts:
 | File | Purpose |
 | :--- | :--- |
 | `components.json` | Stores style, aliases, framework RSC settings, and Tailwind configurations. |
-| `lib/utils.ts` | Exports the `cn(...)` utility helper (`clsx` + `tailwind-merge`). |
+| `lib/utils.ts` | Exports the `cn(...)` utility helper (from `cn`). |
 | Global CSS (e.g., `app/globals.css`) | Injects initial theme CSS variables (`:root` and `.dark`). |
 
 ---

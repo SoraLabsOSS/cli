@@ -200,7 +200,7 @@ describe("transformCss", () => {
     expect(output).toContain("scrollbar-width: none");
   });
 
-  test("merges @apply into an existing rule via tailwind-merge", async () => {
+  test("merges @apply into an existing rule via cn", async () => {
     const input = `${V4_CSS}\n.badge {\n  @apply p-2 text-sm;\n}\n`;
     const output = await transformCss(input, {
       ".badge": { "@apply p-4": {} },

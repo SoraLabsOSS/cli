@@ -311,4 +311,96 @@ describe("add", () => {
       .join("\n");
     expect(errOutput).toContain('No "package.json" found');
   });
+
+  test("writes component envVars to .env.local", async () => {
+    const itemWithEnv = {
+      ...CARD_COMPONENT,
+      envVars: {
+        UPLOADTHING_SECRET: "sk_test_123",
+      },
+    };
+    restoreFetch = mockFetch(() => jsonResponse(itemWithEnv));
+    mockSpawn(0);
+    const { add } = await import("@/commands/add.js");
+
+    const ok = await add(["card"], { cwd: tempDir, force: true, yes: true });
+
+    expect(ok).toBe(true);
+    const envFile = join(tempDir, ".env.local");
+    expect(existsSync(envFile)).toBe(true);
+    expect(readFileSync(envFile, "utf8")).toContain(
+      "UPLOADTHING_SECRET=sk_test_123"
+    );
+  });
+
+  test("transforms IconPlaceholder and installs icon library package when iconLibrary is configured", async () => {
+    const itemWithIcons = {
+      ...CARD_COMPONENT,
+      files: [
+        {
+          content: `import * as React from "react";
+import { IconPlaceholder } from "@/components/icon-placeholder";
+export function Card() {
+  return <IconPlaceholder lucide="Check" tabler="IconCheck" />;
+}
+`,
+          path: "card.tsx",
+          type: "registry:ui",
+        },
+      ],
+    };
+    restoreFetch = mockFetch(() => jsonResponse(itemWithIcons));
+    const spawnCalls = mockSpawn(0);
+    writeFileSync(
+      join(tempDir, "components.json"),
+      JSON.stringify({ iconLibrary: "tabler" })
+    );
+    const { add } = await import("@/commands/add.js");
+
+    const ok = await add(["card"], { cwd: tempDir, force: true, yes: true });
+
+    expect(ok).toBe(true);
+    const writtenFile = join(tempDir, "components/sora-ui/card.tsx");
+    expect(existsSync(writtenFile)).toBe(true);
+    const content = readFileSync(writtenFile, "utf8");
+    expect(content).toContain(
+      'import { IconCheck } from "@tabler/icons-react";'
+    );
+    expect(content).toContain("<IconCheck />");
+    expect(content).not.toContain("IconPlaceholder");
+
+    const installedPackages = spawnCalls
+      .map((args) => args.join(" "))
+      .join("\n");
+    expect(installedPackages).toContain("@tabler/icons-react");
+  });
+
+  test("updates tailwind.config.ts when component has tailwind payload in v3 project", async () => {
+    const itemWithTailwind = {
+      ...CARD_COMPONENT,
+      tailwind: {
+        config: {
+          plugins: ["tailwindcss-animate"],
+        },
+      },
+    };
+    restoreFetch = mockFetch(() => jsonResponse(itemWithTailwind));
+    mockSpawn(0);
+    writeFileSync(
+      join(tempDir, "package.json"),
+      JSON.stringify({ dependencies: { tailwindcss: "^3.4.0" } })
+    );
+    const twConfigPath = join(tempDir, "tailwind.config.ts");
+    writeFileSync(
+      twConfigPath,
+      `module.exports = { content: ["./src/**/*.{ts,tsx}"], theme: {}, plugins: [] };\n`
+    );
+    const { add } = await import("@/commands/add.js");
+
+    const ok = await add(["card"], { cwd: tempDir, force: true, yes: true });
+
+    expect(ok).toBe(true);
+    const updatedTw = readFileSync(twConfigPath, "utf8");
+    expect(updatedTw).toContain('require("tailwindcss-animate")');
+  });
 });

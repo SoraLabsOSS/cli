@@ -1,6 +1,6 @@
 # @soralabs/cli
 
-[![Socket Badge](https://badge.socket.dev/npm/package/@soralabs/cli/0.5.7)](https://socket.dev/npm/package/@soralabs/cli/overview/0.5.7)
+[![Socket Badge](https://badge.socket.dev/npm/package/@soralabs/cli/0.5.8)](https://socket.dev/npm/package/@soralabs/cli/overview/0.5.8)
 
 A CLI for installing components from any [shadcn](https://ui.shadcn.com)-compatible registry into your project — defaults to [Sora UI](https://ui.soralabs.studio) and other Sora Labs products, but works against any registry via `--registry <url>`. Includes native registry authoring tools and Model Context Protocol (MCP) support for AI coding assistants.
 
@@ -85,6 +85,9 @@ npx @soralabs/cli --version
 The CLI fetches a shadcn-compatible registry (`<product-url>/r/registry.json`, `<product-url>/r/<name>.json`) built by that product's own `build` step, resolves the dependency tree, automatically transforms React Server Component directives (`"use client"`), writes files into your project, and installs npm dependencies with your detected package manager (bun/pnpm/yarn/npm).
 
 - **No Mandatory Init**: Components can be installed into any project with a `package.json` immediately — aliases and paths are detected on the fly.
+- **Icon Transformer**: Automatically converts `<IconPlaceholder />` tags and `lucide-react` imports to match your project's configured `iconLibrary` (Lucide, Radix UI, Tabler, Hugeicons, Phosphor, Remix Icon) and installs target icon dependencies.
+- **Environment Variables**: Automatically identifies `envVars` from registry items and appends missing variables into `.env.local` and `.env.example` without overwriting existing user values.
+- **Tailwind Config & CSS Updating (v3 & v4)**: Updates `tailwind.config.ts/js` plugins (e.g. `tailwindcss-animate`) and keyframes for Tailwind v3 projects, or maps them into `@theme inline` and `@plugin` for Tailwind v4 CSS stylesheets.
 - **RSC Optimization**: In Next.js App Router projects, components utilizing client hooks are automatically supplied with `"use client"`. In non-RSC environments (Vite, Astro), unused `"use client"` directives are cleanly stripped.
 - **AI-Native with MCP**: Run `npx @soralabs/cli mcp` to start a native Model Context Protocol server, or `npx @soralabs/cli mcp init` to wire component discovery and installation tools directly into Cursor, Claude Code, VS Code, or Antigravity.
 - **Registry Authoring**: Build your own UI libraries with `sora build` and verify schema integrity with `sora validate`.
@@ -97,7 +100,7 @@ In a monorepo, `--cwd <path>` (or `-c`) runs commands as if started inside `<pat
 bun install
 bun run build      # bundles src/index.ts -> dist/index.js via tsup
 bun run typecheck
-bun test           # run test suite (379+ unit tests)
+bun test           # run test suite (428+ unit tests)
 bun x ultracite check
 node dist/index.js list
 ```

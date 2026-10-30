@@ -38,7 +38,7 @@ describe("init command", () => {
     writeFileSync(
       join(tempDir, "package.json"),
       JSON.stringify({
-        dependencies: { clsx: "^2.0.0", "tailwind-merge": "^3.0.0" },
+        dependencies: { cn: "^0.5.0" },
         name: "my-app",
       }),
       "utf8"
@@ -84,7 +84,7 @@ describe("init command", () => {
     writeFileSync(
       join(tempDir, "package.json"),
       JSON.stringify({
-        dependencies: { clsx: "^2.0.0", "tailwind-merge": "^3.0.0" },
+        dependencies: { cn: "^0.5.0" },
         name: "my-app",
       }),
       "utf8"
