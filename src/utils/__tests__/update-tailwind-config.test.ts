@@ -110,6 +110,27 @@ describe("collectTailwindConfig", () => {
     });
   });
 
+  test("ignores prototype-polluting keys in tailwind config theme", () => {
+    const maliciousTheme = JSON.parse(
+      '{"__proto__":{"polluted":true},"constructor":{"prototype":{"x":1}},"extend":{"colors":{"primary":"#123456"}}}'
+    ) as Record<string, unknown>;
+    const merged = collectTailwindConfig([
+      makeItem({
+        tailwind: {
+          config: {
+            theme: maliciousTheme,
+          },
+        },
+      }),
+    ]);
+    expect(merged?.theme).toEqual({
+      extend: {
+        colors: { primary: "#123456" },
+      },
+    });
+    expect(Object.hasOwn(Object.prototype as object, "polluted")).toBe(false);
+  });
+
   test("returns null when no item specifies tailwind config", () => {
     expect(collectTailwindConfig([makeItem({})])).toBeNull();
   });

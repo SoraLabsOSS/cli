@@ -32,6 +32,11 @@ function mergeObject(
   source: Record<string, unknown>
 ): void {
   for (const [key, value] of Object.entries(source)) {
+    // Inline literal checks (not Set.has) — CodeQL's
+    // js/prototype-pollution-utility only recognizes this shape as a sanitizer.
+    if (key === "__proto__" || key === "constructor" || key === "prototype") {
+      continue;
+    }
     const existing = target[key];
     if (isPlainObject(existing) && isPlainObject(value)) {
       mergeObject(existing, value);
