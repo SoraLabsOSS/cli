@@ -58,6 +58,30 @@ Executing `init` will establish the following artifacts:
 | `lib/utils.ts` | Exports the `cn(...)` utility helper (from `cn`). |
 | Global CSS (e.g., `app/globals.css`) | Injects initial theme CSS variables (`:root` and `.dark`). |
 
+### `components.json` keys used by `add`
+
+`init` writes a standard shadcn `components.json`. Two optional keys control how `add` adapts registry components to your project:
+
+| Key | Purpose |
+| :--- | :--- |
+| `iconLibrary` | Icon library that registry components are converted to. Supported values: `lucide` (default), `tabler`, `radix`, `hugeicons`, `phosphor`, `remixicon`. `add` rewrites `<IconPlaceholder />` tags and `lucide-react` imports, then installs the matching icon package. |
+| `tailwind.config` | Path to your Tailwind CSS v3 config file, relative to the project directory. `init` fills this in when it detects `tailwind.config.{ts,js,mjs,cjs}`. `add` merges registry `tailwind.config` plugins and theme values into this file. |
+
+`init` doesn't prompt for `iconLibrary`. Add it manually to use an icon library other than Lucide:
+
+```json components.json
+{
+  "style": "new-york-v4",
+  "iconLibrary": "tabler",
+  "tailwind": {
+    "config": "tailwind.config.ts",
+    "css": "app/globals.css",
+    "baseColor": "zinc",
+    "cssVariables": true
+  }
+}
+```
+
 ---
 
 ## Options

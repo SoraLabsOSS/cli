@@ -37,6 +37,87 @@ When installing a component, `@soralabs/cli` automatically resolves two types of
    * If they refer to bare shadcn base components (e.g., `button`, `dialog`), they are automatically fetched from `https://ui.shadcn.com/r/styles/...` matching your project's configured style in `components.json`.
 2. **NPM Dependencies**: Packages required by the component (e.g. `framer-motion`, `lucide-react`). These are installed automatically using your project's detected package manager.
 
+## Registry Item Fields
+
+Besides `files`, `dependencies`, and `registryDependencies`, `add` honors the following registry item fields. Use them when you author a registry so components install with no manual setup.
+
+### `envVars`
+
+Declare environment variables your component needs as key/value pairs. Values must be single-line strings. Keys must be valid env var names (letters, digits, and underscores, not starting with a digit).
+
+```json
+{
+  "name": "file-upload",
+  "type": "registry:block",
+  "envVars": {
+    "UPLOAD_API_KEY": "",
+    "NEXT_PUBLIC_UPLOAD_URL": "https://uploads.example.com"
+  }
+}
+```
+
+`add` appends only keys that are missing from the user's env file. It never overwrites existing values. The env file is the first one found among `.env.local`, `.env`, `.env.development.local`, `.env.development`, and `.env.example`. If none exist, `add` creates `.env.local`. When `.env.example` exists, `add` appends missing keys there too. Ship placeholder values rather than real secrets.
+
+### `tailwind.config`
+
+Declare Tailwind plugins and theme extensions your component relies on:
+
+```json
+{
+  "name": "shimmer-text",
+  "type": "registry:ui",
+  "tailwind": {
+    "config": {
+      "plugins": ["tailwindcss-animate"],
+      "theme": {
+        "extend": {
+          "keyframes": {
+            "shimmer": {
+              "from": { "backgroundPosition": "0 0" },
+              "to": { "backgroundPosition": "-200% 0" }
+            }
+          },
+          "animation": {
+            "shimmer": "shimmer 2s linear infinite"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+`plugins` entries can be bare package names or expressions such as `require("tailwindcss-animate")`.
+
+* **Tailwind CSS v3**: `add` adds the plugins, sets class-based `darkMode`, and deep-merges `theme` into the user's `tailwind.config.{ts,js,mjs,cjs}`. It reads the path from `tailwind.config` in `components.json` first.
+* **Tailwind CSS v4**: `add` maps plugins to `@plugin` rules, keyframes to `@keyframes`, and animations to `--animate-*` variables in the global CSS file.
+
+If `add` can't find a Tailwind config file, it prints a warning and skips this step.
+
+### `<IconPlaceholder />`
+
+Write icons as `<IconPlaceholder />` tags so they render with each user's preferred icon library. Pass one attribute per library with that library's icon name. Other attributes pass through to the final icon.
+
+```tsx
+import { IconPlaceholder } from "@/components/icon-placeholder";
+
+export function SearchButton() {
+  return (
+    <IconPlaceholder
+      lucide="Search"
+      tabler="IconSearch"
+      radix="MagnifyingGlassIcon"
+      hugeicons="Search01Icon"
+      phosphor="MagnifyingGlass"
+      remixicon="RiSearchLine"
+      className="size-4"
+    />
+  );
+}
+```
+
+`add` replaces each tag with the icon for the user's `iconLibrary` in `components.json`. If the tag has no attribute for that library, `add` falls back to the `lucide` name. `add` also removes the `IconPlaceholder` import, adds the icon library import, and installs the icon package. Components that import from `lucide-react` directly are converted the same way when `iconLibrary` is set to another library.
+
 ## Security Considerations
 
 Registry components are copied into your source tree and execute directly within your application runtime.

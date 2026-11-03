@@ -118,11 +118,12 @@ If your project specifies an `iconLibrary` in `components.json` (such as `tabler
 ### 2. Environment Variables (`envVars`)
 When a component or block requires environment variables (e.g., upload services, authentication providers, payment integrations):
 - Detects `envVars` declared in registry schemas.
-- Appends missing keys into your `.env.local` (or existing `.env`, `.env.example`).
-- Preserves your existing custom values and comments without overwriting them.
+- Appends missing keys to a single env file: the first one that exists among `.env.local`, `.env`, `.env.development.local`, `.env.development`, and `.env.example`. If none exist, `add` creates `.env.local`.
+- Also appends missing keys to `.env.example` when that file exists and isn't the file already selected.
+- Preserves your existing values (including empty ones) and comments without overwriting them.
 - Previews variables to be added when running with `--dry-run`.
 
 ### 3. Tailwind Configuration & Keyframes (v3 & v4)
-- **Tailwind CSS v3**: Automatically parses and injects plugins (e.g., `tailwindcss-animate`), dark mode configuration, and merges `theme.extend` (animations, keyframes, colors) into `tailwind.config.ts` or `tailwind.config.js`.
+- **Tailwind CSS v3**: Automatically parses and injects plugins (e.g., `tailwindcss-animate`), dark mode configuration, and merges `theme.extend` (animations, keyframes, colors) into your Tailwind config. `add` uses the path in `components.json` `tailwind.config` first, then falls back to `tailwind.config.{ts,js,mjs,cjs}` in the project root. If no config file is found, `add` prints a warning and you add the plugins and theme manually.
 - **Tailwind CSS v4**: Injects plugins (`@plugin`), `@keyframes`, and CSS animation variables (`--animate-*`) directly into `@theme inline` in your global CSS stylesheet.
 - **Smart `@apply` Merging**: Uses `cn` to resolve utility class conflicts when merging registry `@apply` directives, preventing duplicate or conflicting Tailwind rules.

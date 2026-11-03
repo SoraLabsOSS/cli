@@ -21,6 +21,19 @@ npx @soralabs/cli add card --cwd packages/ui
   - Installs npm packages directly into `packages/ui/package.json`.
   - Resolves lockfiles from the monorepo root automatically.
 
+### Shared Tailwind config
+
+If your Tailwind CSS v3 config lives outside the package (for example, at the monorepo root), set `tailwind.config` in the package's `components.json` to its path. The path is resolved relative to the `--cwd` directory. `add` checks this path before looking for `tailwind.config.{ts,js,mjs,cjs}` in the package itself.
+
+```json packages/ui/components.json
+{
+  "tailwind": {
+    "config": "../../tailwind.config.ts",
+    "css": "src/styles/globals.css"
+  }
+}
+```
+
 ## Common Monorepo Examples
 
 <CodeGroup>

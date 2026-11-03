@@ -38,7 +38,7 @@ yarn dlx @soralabs/cli@latest add text-effect
 
 When executed, the CLI will:
 1. Fetch component schema and animation code from `https://ui.soralabs.studio/r/text-effect.json`.
-2. Automatically resolve required npm packages (e.g. `motion`, `clsx`, `tailwind-merge`).
+2. Automatically resolve required npm packages (e.g. `motion`, and `cn` when the component depends on the `utils` helper).
 3. Place component files into your project under `components/sora-ui/`.
 4. Run your package manager install command in the background.
 
