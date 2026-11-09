@@ -1,6 +1,6 @@
 # @soralabs/cli
 
-[![Socket Badge](https://badge.socket.dev/npm/package/@soralabs/cli/0.5.8)](https://socket.dev/npm/package/@soralabs/cli/overview/0.5.8)
+[![Socket Badge](https://badge.socket.dev/npm/package/@soralabs/cli/0.5.9)](https://socket.dev/npm/package/@soralabs/cli/overview/0.5.9)
 
 A CLI for installing components from any [shadcn](https://ui.shadcn.com)-compatible registry into your project — defaults to [Sora UI](https://ui.soralabs.studio) and other Sora Labs products, but works against any registry via `--registry <url>`. Includes native registry authoring tools and Model Context Protocol (MCP) support for AI coding assistants.
 
@@ -90,7 +90,7 @@ The CLI fetches a shadcn-compatible registry (`<product-url>/r/registry.json`, `
 - **Tailwind Config & CSS Updating (v3 & v4)**: Updates `tailwind.config.ts/js` plugins (e.g. `tailwindcss-animate`) and keyframes for Tailwind v3 projects, or maps them into `@theme inline` and `@plugin` for Tailwind v4 CSS stylesheets.
 - **RSC Optimization**: In Next.js App Router projects, components utilizing client hooks are automatically supplied with `"use client"`. In non-RSC environments (Vite, Astro), unused `"use client"` directives are cleanly stripped.
 - **AI-Native with MCP**: Run `npx @soralabs/cli mcp` to start a native Model Context Protocol server, or `npx @soralabs/cli mcp init` to wire component discovery and installation tools directly into Cursor, Claude Code, VS Code, or Antigravity.
-- **Registry Authoring**: Build your own UI libraries with `sora build` and verify schema integrity with `sora validate`.
+- **Registry Authoring**: Build your own UI libraries with `sora build` (or `sora-cli build`) and verify schema integrity with `sora validate` (or `sora-cli validate`). Both `sora` and `sora-cli` aliases are supported.
 
 In a monorepo, `--cwd <path>` (or `-c`) runs commands as if started inside `<path>` — it detects that workspace's own `tsconfig.json`/`components.json` aliases and writes components there without having to `cd` into it first.
 
